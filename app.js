@@ -2,7 +2,7 @@
 // CONFIG
 // ========================================
 
-const API = "https://mayconnect-backend-1.onrender.com"
+const API = "https://mayconnect-backend-1.onrender.com/api"
 const token = localStorage.getItem("token")
 
 // ========================================
