@@ -114,6 +114,7 @@ display:block;
 
 </style>
 </head>
+
 <body>
 
 <img src="logo.png" class="logo">
@@ -123,11 +124,11 @@ display:block;
 <div class="title">Welcome Back</div>
 
 <div class="inputBox">
-<input id="username" placeholder="Username">
+<input id="loginUsername" placeholder="Username">
 </div>
 
 <div class="inputBox">
-<input id="password" type="password" placeholder="Password">
+<input id="loginPassword" type="password" placeholder="Password">
 <button class="showBtn" onclick="togglePassword()">Show</button>
 </div>
 
@@ -148,19 +149,17 @@ Create Account
 <script src="app.js"></script>
 
 <script>
-
 function togglePassword(){
 
-const pass=document.getElementById("password")
+const pass = document.getElementById("loginPassword");
 
-if(pass.type==="password"){
-pass.type="text"
+if(pass.type === "password"){
+pass.type = "text";
 }else{
-pass.type="password"
+pass.type = "password";
 }
 
 }
-
 </script>
 
 </body>
