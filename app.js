@@ -12,6 +12,10 @@ function el(id){
 return document.getElementById(id)
 }
 
+/* SUCCESS SOUND */
+
+const successSound=new Audio("sounds/success.mp3")
+
 /* TOAST */
 
 function showToast(msg){
@@ -35,13 +39,49 @@ setTimeout(()=>t.remove(),3000)
 
 }
 
-/* NETWORK PREFIX */
+/* GENERATE TRANSACTION ID */
+
+function generateTransactionID(){
+
+return "MC"+Date.now()+Math.floor(Math.random()*1000)
+
+}
+
+/* SAVE TRANSACTION HISTORY */
+
+function saveTransaction(tx){
+
+let history=JSON.parse(localStorage.getItem("transactions")||"[]")
+
+history.unshift(tx)
+
+localStorage.setItem("transactions",JSON.stringify(history))
+
+}
+
+/* NETWORK PREFIX (FULL NIGERIA) */
 
 const NETWORK_PREFIX={
-MTN:["0803","0806","0813","0816","0703","0706","0903","0906"],
-AIRTEL:["0802","0808","0812","0701","0708","0901","0902"],
-GLO:["0805","0807","0811","0705","0905"],
-"9MOBILE":["0809","0817","0818","0908"]
+
+MTN:[
+"0803","0806","0703","0706","0813","0816","0810","0814",
+"0903","0906","0913","0916"
+],
+
+AIRTEL:[
+"0802","0808","0701","0708","0812",
+"0901","0902","0907","0911","0912"
+],
+
+GLO:[
+"0805","0807","0705","0811","0815",
+"0905","0915"
+],
+
+"9MOBILE":[
+"0809","0817","0818","0908","0909"
+]
+
 }
 
 /* DETECT NETWORK */
@@ -79,7 +119,7 @@ const logo=el("networkLogo")
 if(!logo) return
 
 const logos={
-MTN:"images/Mtn.png",
+MTN:"images/MTN.png",
 AIRTEL:"images/Airtel.png",
 GLO:"images/Glo.png",
 "9MOBILE":"images/9mobile.png"
@@ -105,7 +145,10 @@ if(phone.length<4) return
 
 const network=detectNetwork(phone)
 
-if(!network) return
+if(!network){
+el("plans").innerHTML=""
+return
+}
 
 showNetworkLogo(network)
 
@@ -142,7 +185,9 @@ if(!container) return
 
 container.innerHTML=""
 
-const filtered=plans.filter(p=>p.network?.toUpperCase()===network)
+const filtered=plans.filter(p=>
+p.network?.toUpperCase()===network
+)
 
 if(filtered.length===0){
 container.innerHTML="<p>No plans available</p>"
@@ -238,11 +283,35 @@ pin
 const data=await res.json()
 
 if(!data.status){
+
+if(data.message?.toLowerCase().includes("balance")){
+showToast("Insufficient wallet balance")
+}else{
 showToast(data.message || "Transaction failed")
+}
+
 return
 }
 
+successSound.play()
+
+const txid=generateTransactionID()
+
+const tx={
+id:txid,
+type:"DATA",
+network:detectNetwork(phone),
+phone:phone,
+amount:data.amount || "",
+status:"SUCCESS",
+date:new Date().toLocaleString()
+}
+
+saveTransaction(tx)
+
 showToast("Data purchase successful")
+
+showReceipt(tx)
 
 }catch{
 
@@ -286,11 +355,35 @@ pin
 const data=await res.json()
 
 if(!data.status){
-showToast(data.message || "Airtime failed")
+
+if(data.message?.toLowerCase().includes("balance")){
+showToast("Insufficient wallet balance")
+}else{
+showToast(data.message || "Transaction failed")
+}
+
 return
 }
 
+successSound.play()
+
+const txid=generateTransactionID()
+
+const tx={
+id:txid,
+type:"AIRTIME",
+network:detectNetwork(phone),
+phone:phone,
+amount:amount,
+status:"SUCCESS",
+date:new Date().toLocaleString()
+}
+
+saveTransaction(tx)
+
 showToast("Airtime successful")
+
+showReceipt(tx)
 
 }catch{
 
@@ -328,78 +421,87 @@ closePinModal()
 
 }
 
-/* SAVE PIN */
-
-async function savePin(){
-
-const pin=el("pin")?.value
-const token=getToken()
-
-if(!pin){
-showToast("Enter PIN")
-return
-}
-
-try{
-
-const res=await fetch(`${API}/api/set-pin`,{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json",
-Authorization:`Bearer ${token}`
-},
-
-body:JSON.stringify({pin})
-
-})
-
-const data=await res.json()
-
-showToast(data.message || "PIN saved")
-
-}catch{
-
-showToast("Failed to save PIN")
-
-}
-
-}
-
-/* BIOMETRIC ENABLE */
-
-function enableBiometric(){
-
-if(!window.PublicKeyCredential){
-
-showToast("Biometric not supported")
-
-return
-
-}
-
-localStorage.setItem("biometric","true")
-
-showToast("Biometric enabled")
-
-}
-
 /* BIOMETRIC PURCHASE */
 
 function confirmBiometric(){
 
 if(!localStorage.getItem("biometric")){
-
 showToast("Enable biometric first")
-
 return
+}
+
+if(purchaseType==="airtime"){
+
+const phone=el("phone")?.value
+const amount=el("amount")?.value
+
+buyAirtime(phone,amount,"biometric")
+
+}else{
+
+buyData(selectedPlan,"biometric")
 
 }
 
-showToast("Biometric confirmed")
+closePinModal()
 
-confirmPurchase()
+}
+
+/* RECEIPT */
+
+function showReceipt(data){
+
+const receipt=`
+
+<div class="receipt">
+
+<img src="images/logo.png" style="width:120px;margin-bottom:10px">
+
+<h3>MayConnect Receipt</h3>
+
+<p><b>Reference:</b> ${data.id}</p>
+
+<p><b>Type:</b> ${data.type}</p>
+
+<p><b>Network:</b> ${data.network}</p>
+
+<p><b>Phone:</b> ${data.phone}</p>
+
+<p><b>Amount:</b> ₦${data.amount}</p>
+
+<p><b>Status:</b> ${data.status}</p>
+
+<p><b>Date:</b> ${data.date}</p>
+
+<button onclick="shareReceipt()">Share Receipt</button>
+
+</div>
+
+`
+
+const div=document.createElement("div")
+div.innerHTML=receipt
+
+document.body.appendChild(div)
+
+}
+
+/* SHARE RECEIPT */
+
+function shareReceipt(){
+
+if(navigator.share){
+
+navigator.share({
+title:"MayConnect Receipt",
+text:"Transaction completed successfully"
+})
+
+}else{
+
+showToast("Sharing not supported")
+
+}
 
 }
 
@@ -410,11 +512,8 @@ async function loadDashboard(){
 const token=getToken()
 
 if(!token){
-
 window.location="login.html"
-
 return
-
 }
 
 try{
@@ -431,7 +530,7 @@ el("usernameDisplay").innerText=`Hello ${user.name}`
 if(el("walletBalance"))
 el("walletBalance").innerText=`₦${user.wallet || 0}`
 
-if((user.is_admin || user.isAdmin) && el("adminPanel")){
+if((user.is_admin || user.isAdmin || user.role==="admin") && el("adminPanel")){
 el("adminPanel").style.display="block"
 }
 
@@ -441,22 +540,18 @@ console.log(e)
 
 }
 
-/* REMOVE LOADER */
-
 const loader=el("dashboardLoader")
-
 if(loader) loader.style.display="none"
 
 }
 
-/* PAGE LOAD */
+/* PAGE LOAD FIX */
 
-window.addEventListener("load",()=>{
+document.addEventListener("DOMContentLoaded",()=>{
 
 setTimeout(()=>{
 
 const loader=el("dashboardLoader")
-
 if(loader) loader.style.display="none"
 
 },2000)
