@@ -61,7 +61,7 @@ return network
 return null
 }
 
-/* ================= SHOW NETWORK LOGO ================= */
+/* ================= NETWORK LOGO ================= */
 
 function showNetworkLogo(network){
 
@@ -70,9 +70,10 @@ const logo=document.getElementById("networkLogo")
 if(!logo) return
 
 const logos={
-MTN:"images/Mtn.png",
-AIRTEL:"images/Airtel.png",
-GLO:"images/Glo.png"
+MTN:"images/mtn.png",
+AIRTEL:"images/airtel.png",
+GLO:"images/glo.png",
+"9MOBILE":"images/9mobile.png"
 }
 
 logo.src=logos[network] || ""
@@ -131,15 +132,12 @@ card.className="planCard"
 card.innerHTML=`
 
 <h4>${plan.plan}</h4>
-
 <p>₦${plan.price}</p>
-
 <p>${plan.validity || ""}</p>
 
-<button onclick="openPinModal('${plan.plan_id}')">
+<button onclick="openPinModal('${plan.plan_id}','data')">
 Buy
 </button>
-
 `
 
 container.appendChild(card)
@@ -151,6 +149,26 @@ container.appendChild(card)
 showToast("Failed to load data plans")
 
 }
+
+}
+
+/* ================= PIN MODAL ================= */
+
+let selectedPlan=null
+let purchaseType=null
+
+function openPinModal(plan,type){
+
+selectedPlan=plan
+purchaseType=type
+
+document.getElementById("pinModal").style.display="flex"
+
+}
+
+function closePinModal(){
+
+document.getElementById("pinModal").style.display="none"
 
 }
 
@@ -188,8 +206,6 @@ return
 
 showToast("Data purchase successful")
 
-loadDashboard()
-
 }
 
 /* ================= BUY AIRTIME ================= */
@@ -225,8 +241,6 @@ return
 
 showToast("Airtime successful")
 
-loadDashboard()
-
 }
 
 /* ================= CONFIRM PURCHASE ================= */
@@ -235,16 +249,16 @@ async function confirmPurchase(){
 
 const pin=document.getElementById("pin").value
 
-if(window.purchaseType==="airtime"){
+if(purchaseType==="airtime"){
 
 const phone=document.getElementById("phone").value
-const amount=document.getElementById("airtimeAmount").value
+const amount=document.getElementById("amount").value
 
 buyAirtime(phone,amount,pin)
 
 }else{
 
-buyData(window.selectedPlan,pin)
+buyData(selectedPlan,pin)
 
 }
 
@@ -274,7 +288,8 @@ Authorization:`Bearer ${token}`
 body:JSON.stringify({
 amount,
 bank,
-account_number:account
+account_number:account,
+account_name:"Admin"
 })
 
 })
@@ -371,8 +386,6 @@ if(avatar){
 avatar.innerText=user.username.charAt(0).toUpperCase()
 }
 
-/* ADMIN PANEL */
-
 if(user.is_admin){
 
 const panel=document.getElementById("adminPanel")
@@ -389,6 +402,10 @@ profit.innerText="₦"+Number(user.admin_wallet).toLocaleString()
 
 loadTransactions()
 
+const loader=document.getElementById("dashboardLoader")
+
+if(loader) loader.style.display="none"
+
 }catch{
 
 localStorage.removeItem("token")
@@ -397,6 +414,8 @@ window.location="login.html"
 }
 
 }
+
+/* ================= AUTO LOAD ================= */
 
 if(window.location.pathname.includes("dashboard")){
 window.addEventListener("load",loadDashboard)
