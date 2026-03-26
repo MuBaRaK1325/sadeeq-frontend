@@ -153,7 +153,7 @@ const res=await fetch(`${API}/api/plans`,{
 headers:{Authorization:`Bearer ${token}`}
 })
 
-let plans=await res.json()
+const plans=await res.json()
 
 const container=el("plans")
 
@@ -188,7 +188,7 @@ container.appendChild(card)
 
 })
 
-}catch(e){
+}catch{
 
 showToast("Failed to load plans")
 
@@ -262,7 +262,7 @@ id:generateTransactionID(),
 type:"DATA",
 network:detectNetwork(phone),
 phone,
-amount:data.amount || "",
+amount:data.amount,
 status:"SUCCESS",
 date:new Date().toLocaleString()
 }
@@ -321,7 +321,7 @@ id:generateTransactionID(),
 type:"AIRTIME",
 network:detectNetwork(phone),
 phone,
-amount,
+amount:data.amount,
 status:"SUCCESS",
 date:new Date().toLocaleString()
 }
@@ -367,59 +367,29 @@ closePinModal()
 
 }
 
-/* BIOMETRIC ENABLE */
-
-function enableBiometric(){
-
-localStorage.setItem("biometric","true")
-
-showToast("Biometric enabled")
-
-}
-
-/* BIOMETRIC PURCHASE */
-
-function confirmBiometric(){
-
-if(!localStorage.getItem("biometric")){
-showToast("Enable biometric first")
-return
-}
-
-/* still uses pin because backend requires it */
-
-const savedPin=localStorage.getItem("userPin")
-
-if(!savedPin){
-showToast("Set transaction PIN first")
-return
-}
-
-if(purchaseType==="airtime"){
-
-buyAirtime(
-el("phone")?.value,
-el("amount")?.value,
-savedPin
-)
-
-}else{
-
-buyData(selectedPlan,savedPin)
-
-}
-
-}
-
 /* SAVE PIN */
 
 async function savePin(){
 
 const pin=el("pin")?.value
+const token=getToken()
 
-localStorage.setItem("userPin",pin)
+const res=await fetch(`${API}/api/set-pin`,{
 
-showToast("PIN saved")
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+Authorization:`Bearer ${token}`
+},
+
+body:JSON.stringify({pin})
+
+})
+
+const data=await res.json()
+
+showToast(data.message)
 
 }
 
@@ -462,61 +432,6 @@ showToast("Password change failed")
 
 }
 
-/* RECEIPT */
-
-function showReceipt(data){
-
-const div=document.createElement("div")
-
-div.innerHTML=`
-
-<div class="receipt">
-
-<h3>MayConnect Receipt</h3>
-
-<p>Reference: ${data.id}</p>
-
-<p>Type: ${data.type}</p>
-
-<p>Network: ${data.network}</p>
-
-<p>Phone: ${data.phone}</p>
-
-<p>Amount: ₦${data.amount}</p>
-
-<p>Status: ${data.status}</p>
-
-<p>Date: ${data.date}</p>
-
-<button onclick="shareReceipt()">Share</button>
-
-</div>
-
-`
-
-document.body.appendChild(div)
-
-}
-
-/* SHARE */
-
-function shareReceipt(){
-
-if(navigator.share){
-
-navigator.share({
-title:"MayConnect Receipt",
-text:"Transaction completed successfully"
-})
-
-}else{
-
-showToast("Sharing not supported")
-
-}
-
-}
-
 /* DASHBOARD */
 
 async function loadDashboard(){
@@ -530,21 +445,21 @@ return
 
 try{
 
-const res=await fetch(`${API}/api/user`,{
+const res=await fetch(`${API}/api/me`,{
 headers:{Authorization:`Bearer ${token}`}
 })
 
-const user=await res.json()
+const data=await res.json()
+
+const user=data.user || data
 
 if(el("usernameDisplay"))
-el("usernameDisplay").innerText=`Hello ${user.name}`
+el("usernameDisplay").innerText=`Hello ${user.username}`
 
 if(el("walletBalance"))
-el("walletBalance").innerText=`₦${user.wallet || 0}`
+el("walletBalance").innerText=`₦${user.wallet_balance || 0}`
 
-/* ADMIN PANEL */
-
-if(user.role==="admin" || user.is_admin===true){
+if(user.is_admin){
 
 el("adminPanel")?.classList.remove("hidden")
 
