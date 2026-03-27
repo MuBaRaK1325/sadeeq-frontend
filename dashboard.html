@@ -4,147 +4,197 @@
 <meta charset="UTF-8">
 <title>MAY-Connect | Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <link rel="stylesheet" href="styles.css">
+
 <style>
-/* Your existing styles remain unchanged */
-body{ background:#000;color:white;font-family:Arial;margin:0;padding-bottom:90px;display:none; }
-#dashboardLoader{ position:fixed;top:0;left:0;width:100%;height:100%;background:#020b1f;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column; }
-.loader{ width:70px;height:70px;border:6px solid #0c1a36;border-top:6px solid #3b78e7;border-radius:50%;animation:spin 1s linear infinite; }
-@keyframes spin{ 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
-.logo-circle{text-align:center;margin-top:20px;} .logo-circle img{width:90px;}
-.wallet-card{background:linear-gradient(135deg,#3b78e7,#274ea3);padding:20px;border-radius:16px;margin:20px;text-align:center;}
+
+body{
+background:#000;
+color:white;
+font-family:Arial;
+margin:0;
+padding-bottom:90px;
+display:none;
+}
+
+#dashboardLoader{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#020b1f;
+display:flex;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+z-index:9999;
+}
+
+.loader{
+width:70px;
+height:70px;
+border:6px solid #0c1a36;
+border-top:6px solid #3b78e7;
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg)}
+100%{transform:rotate(360deg)}
+}
+
+.logo-circle{text-align:center;margin-top:20px;}
+.logo-circle img{width:90px;}
+
+.wallet-card{
+background:linear-gradient(135deg,#3b78e7,#274ea3);
+padding:20px;
+border-radius:16px;
+margin:20px;
+text-align:center;
+}
+
 .wallet-card strong{font-size:30px;}
-.admin-card{background:#08142c;margin:20px;padding:20px;border-radius:16px;}
-.admin-card input{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px;background:#020b1f;color:white;}
-.admin-withdraw-btn{margin-top:15px;width:100%;padding:14px;border:none;background:#3b78e7;color:white;border-radius:10px;}
-.quickActions{position:fixed;bottom:100px;right:20px;display:flex;flex-direction:column;gap:14px;}
-.quickActions button{background:#3b78e7;border:none;width:65px;height:65px;border-radius:50%;color:white;font-size:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 5px 20px rgba(0,0,0,0.5);}
-.quickActions span{font-size:10px;}
-.popular-plan{background:#112c64;margin:20px;padding:15px;border-radius:12px;text-align:center;}
-.popular-plan button{margin-top:10px;padding:10px 15px;background:#3b78e7;border:none;border-radius:8px;color:white;}
-.transaction-card{background:#0c1a36;padding:12px;border-radius:12px;margin:10px 20px;}
-.support-box{margin:20px;background:#0c1a36;padding:15px;border-radius:12px;text-align:center;}
-.support-box button{margin-top:8px;padding:10px 14px;border:none;border-radius:8px;background:#3b78e7;color:white;}
-.profilePanel{position:fixed;bottom:0;left:0;width:100%;height:100%;background:#000;z-index:5000;transform:translateY(100%);transition:0.4s;padding:20px;overflow:auto;}
-.profilePanel.show{transform:translateY(0);border-top:2px solid #3b78e7;}
-.avatar{width:70px;height:70px;border-radius:50%;background:#3b78e7;display:flex;align-items:center;justify-content:center;font-size:28px;margin:auto;}
-.profileBtn{width:100%;padding:14px;margin-top:10px;background:#050b18;border:1px solid #3b78e7;border-radius:10px;color:white;text-align:left;}
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#000c;display:none;align-items:center;justify-content:center;z-index:6000;}
-.modalBox{background:#050b18;padding:25px;border-radius:12px;border:1px solid #3b78e7;text-align:center;}
-.modalBox input{width:60px;height:50px;font-size:22px;text-align:center;border-radius:8px;border:1px solid #3b78e7;background:black;color:white;margin:0 5px;}
-.modalBox input.fullInput{width:80%;margin:5px 0;font-size:16px;text-align:left;padding:10px;}
-.bottomNav{position:fixed;bottom:0;left:0;width:100%;height:70px;background:#08142c;display:flex;justify-content:space-around;align-items:center;border-top:2px solid #3b78e7;}
-.bottomNav button{background:none;border:none;color:white;display:flex;flex-direction:column;align-items:center;font-size:20px;}
-.bottomNav span{font-size:11px;}
+
+.admin-card{
+background:#08142c;
+margin:20px;
+padding:20px;
+border-radius:16px;
+display:none;
+}
+
+.transaction-card{
+background:#0c1a36;
+padding:12px;
+border-radius:12px;
+margin:10px 20px;
+}
+
+.quickActions{
+position:fixed;
+bottom:100px;
+right:20px;
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.quickActions button{
+background:#3b78e7;
+border:none;
+width:65px;
+height:65px;
+border-radius:50%;
+color:white;
+font-size:22px;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+}
+
+.bottomNav{
+position:fixed;
+bottom:0;
+width:100%;
+height:70px;
+background:#08142c;
+display:flex;
+justify-content:space-around;
+align-items:center;
+}
+
 </style>
 </head>
+
 <body>
 
 <!-- LOADER -->
 <div id="dashboardLoader">
-  <div class="loader"></div>
-  <p style="margin-top:15px">Loading dashboard...</p>
+<div class="loader"></div>
+<p style="margin-top:15px">Loading dashboard...</p>
 </div>
 
 <!-- HEADER -->
-<div class="logo-circle"><img src="images/logo.png" alt="Logo"></div>
-<div style="text-align:center;margin-bottom:10px;">
-  <h3 id="usernameDisplay">Hello 👋 User</h3>
+<div class="logo-circle">
+<img src="images/logo.png">
 </div>
 
-<!-- SOUNDS -->
-<audio id="welcomeSound" src="sounds/welcome.mp3"></audio>
-<audio id="successSound" src="sounds/success.mp3"></audio>
+<div style="text-align:center;margin-bottom:10px;">
+<h3 id="usernameDisplay">Hello 👋 User</h3>
+</div>
 
 <!-- WALLET -->
 <div class="wallet-card">
-  <p>Wallet Balance</p>
-  <strong id="walletBalance">₦0</strong>
+<p>Wallet Balance</p>
+<strong id="walletBalance">₦0</strong>
 </div>
 
 <!-- ADMIN PANEL -->
-<div id="adminPanel" class="admin-card" style="display:none;">
-  <h3>Admin Profit Withdrawal</h3>
-  <p>Total Profit</p>
-  <strong id="profitBalance">₦0</strong>
-  <input type="number" id="withdrawAmount" placeholder="Enter Amount">
-  <input type="text" id="bankName" placeholder="Bank Name">
-  <input type="text" id="accountNumber" placeholder="Account Number">
-  <button class="admin-withdraw-btn" onclick="adminWithdraw()">Withdraw Profit</button>
+<div id="adminPanel" class="admin-card">
+
+<h3>Admin Profit Withdrawal</h3>
+
+<p>Total Profit</p>
+<strong id="profitBalance">₦0</strong>
+
+<input type="number" id="withdrawAmount" placeholder="Enter Amount">
+
+<input type="text" id="bankName" placeholder="Bank Name">
+
+<input type="text" id="accountNumber" placeholder="Account Number">
+
+<button onclick="adminWithdraw()">Withdraw Profit</button>
+
 </div>
 
 <!-- POPULAR PLAN -->
-<div class="popular-plan">
-  <h4>🔥 Most Popular Data Plan</h4>
-  <p id="popularPlanText">1GB for ₦300</p>
-  <button id="popularPlanBtn">Buy Now</button>
+<div style="margin:20px;background:#112c64;padding:15px;border-radius:12px;text-align:center">
+
+<h4>🔥 Most Popular Data Plan</h4>
+
+<p id="popularPlanText">1GB for ₦300</p>
+
+<button id="popularPlanBtn">Buy Now</button>
+
 </div>
 
 <!-- TRANSACTIONS -->
 <h3 style="margin-left:20px;">Recent Transactions</h3>
-<div id="transactionHistory"></div>
 
-<!-- SUPPORT -->
-<div class="support-box">
-  <h4>Need Help?</h4>
-  <button onclick="callSupport()">📞 Call Support</button>
-  <button onclick="chatSupport()">💬 Contact Developer</button>
-</div>
+<div id="transactionHistory"></div>
 
 <!-- QUICK ACTIONS -->
 <div class="quickActions">
-  <button onclick="location.href='data.html'">📶<span>Data</span></button>
-  <button onclick="location.href='airtime.html'">📞<span>Airtime</span></button>
-  <button onclick="location.href='fund.html'">💳<span>Fund</span></button>
-</div>
 
-<!-- PROFILE PANEL -->
-<div id="profilePanel" class="profilePanel">
-  <div style="text-align:center">
-    <div id="avatar" class="avatar">U</div>
-    <h3 id="profileName">User</h3>
-    <p id="profileEmail">email@email.com</p>
-  </div>
-  <button id="setPinBtn" class="profileBtn" onclick="openPinModal(null,'setPin')">🔐 Set Transaction PIN</button>
-  <button id="changePinBtn" class="profileBtn" onclick="openPinModal(null,'changePin')" style="display:none;">🔑 Change PIN</button>
-  <button class="profileBtn" onclick="openPinModal(null,'changePassword')">🔒 Change Password</button>
-  <button class="profileBtn" onclick="toggleBiometric()">🧬 Enable Biometric Login/Purchase</button>
-  <button class="profileBtn" onclick="callSupport()">📞 Call Support</button>
-  <button class="profileBtn" onclick="chatSupport()">💬 Contact Developer</button>
-  <button class="profileBtn" onclick="logout()">🚪 Logout</button>
-  <button class="profileBtn" onclick="toggleProfile()">⬇ Close</button>
-</div>
+<button onclick="location.href='data.html'">📶<span>Data</span></button>
 
-<!-- PIN MODAL -->
-<div id="pinModal" class="modal">
-  <div class="modalBox">
-    <h3 id="pinModalTitle">Enter Transaction PIN</h3>
-    <div id="pinModalBody"></div>
-    <button style="margin-top:20px" onclick="closePinModal()">Cancel</button>
-  </div>
+<button onclick="location.href='airtime.html'">📞<span>Airtime</span></button>
+
+<button onclick="location.href='fund.html'">💳<span>Fund</span></button>
+
 </div>
 
 <script src="app.js"></script>
+
 <script>
-/* PROFILE PANEL */
-function toggleProfile(){ document.getElementById("profilePanel").classList.toggle("show"); }
 
-/* SUPPORT */
-function callSupport(){ window.location.href="tel:08117988561"; }
-function chatSupport(){ window.location.href="https://wa.me/2348117988561"; }
+document.getElementById("popularPlanBtn").onclick=()=>{
+purchasePlan("popular-plan");
+}
 
-/* WELCOME SOUND + SHOW BODY */
-window.addEventListener("load", ()=>{
-  document.body.style.display="block";
-  setTimeout(()=>{ document.getElementById("welcomeSound")?.play().catch(()=>{}); },1200);
-});
+/* emergency loader protection */
 
-/* POPULAR PLAN BUTTON */
-document.getElementById("popularPlanBtn").addEventListener("click", ()=>{
-  // Example plan object
-  const plan = {name:"1GB", price:300, validityDays:30};
-  purchasePlan(plan);
-});
+setTimeout(()=>{
+document.getElementById("dashboardLoader").style.display="none";
+document.body.style.display="block";
+},6000);
+
 </script>
+
 </body>
 </html>

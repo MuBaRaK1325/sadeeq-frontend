@@ -1,34 +1,56 @@
 const API = "https://mayconnect-backend-1.onrender.com";
 
 /* TOKEN */
-function getToken(){ return localStorage.getItem("token"); }
+function getToken(){
+  return localStorage.getItem("token");
+}
 
 /* ELEMENT */
-function el(id){ return document.getElementById(id); }
+function el(id){
+  return document.getElementById(id);
+}
 
-/* SAFE FETCH (prevents freezing) */
+/* LOADER CONTROL */
+function hideLoader(){
+  const loader = el("dashboardLoader");
+  if(loader){
+    loader.style.display="none";
+  }
+}
+
+/* SAFE FETCH */
 async function safeFetch(url, options={}, timeout=10000){
-  const controller=new AbortController();
-  const id=setTimeout(()=>controller.abort(),timeout);
+
+  const controller = new AbortController();
+  const id = setTimeout(()=>controller.abort(), timeout);
 
   try{
-    const res=await fetch(url,{...options,signal:controller.signal});
+
+    const res = await fetch(url,{
+      ...options,
+      signal:controller.signal
+    });
+
     clearTimeout(id);
     return res;
+
   }catch(e){
+
     clearTimeout(id);
-    console.log("Fetch timeout:",url);
+    console.log("Fetch error:",url);
     throw e;
+
   }
 }
 
 /* SUCCESS SOUND */
-const successSound=new Audio("sounds/success.mp3");
+const successSound = new Audio("sounds/success.mp3");
 
 /* TOAST */
 function showToast(msg){
-  const t=document.createElement("div");
-  t.innerText=msg;
+
+  const t = document.createElement("div");
+  t.innerText = msg;
 
   Object.assign(t.style,{
     position:"fixed",
@@ -48,45 +70,57 @@ function showToast(msg){
 
 /* WALLET */
 function animateWallet(balance){
-  const wallet=el("walletBalance");
-  if(wallet) wallet.innerText=`₦${balance}`;
+  const wallet = el("walletBalance");
+  if(wallet){
+    wallet.innerText = `₦${balance}`;
+  }
 }
 
 /* TRANSACTIONS */
 function renderTransactions(transactions){
-  const container=el("transactionHistory");
+
+  const container = el("transactionHistory");
   if(!container) return;
 
   container.innerHTML="";
 
   transactions.slice(0,5).forEach(tx=>{
+
     const div=document.createElement("div");
     div.className="transaction-card";
 
     div.innerHTML=`
     <p><strong>${tx.type}</strong> - ₦${tx.amount}</p>
-    <p>${tx.phone||""} (${tx.network||""})</p>
-    <p>${tx.date}</p>
+    <p>${tx.phone||""} ${tx.network?`(${tx.network})`:''}</p>
+    <p>${tx.date||""}</p>
     `;
 
     container.appendChild(div);
+
   });
+
 }
 
+/* FETCH USER TRANSACTIONS */
 async function fetchTransactions(){
+
   try{
-    const res=await safeFetch(`${API}/api/transactions`,{
+
+    const res = await safeFetch(`${API}/api/transactions`,{
       headers:{Authorization:`Bearer ${getToken()}`}
     });
 
     if(!res.ok) return;
 
-    const data=await res.json();
+    const data = await res.json();
     renderTransactions(data);
 
   }catch(e){
+
     console.log("transactions error",e);
+
   }
+
 }
 
 /* NETWORK DETECTION */
@@ -99,82 +133,22 @@ GLO:["0805","0807","0705","0811","0815","0905","0915"],
 };
 
 function detectNetwork(phone){
-phone=phone.replace(/\D/g,"");
-if(phone.startsWith("234")) phone="0"+phone.slice(3);
-const prefix=phone.substring(0,4);
 
-for(const net in NETWORK_PREFIX){
-if(NETWORK_PREFIX[net].includes(prefix)) return net;
-}
+  phone=phone.replace(/\D/g,"");
 
-return null;
-}
+  if(phone.startsWith("234")){
+    phone="0"+phone.slice(3);
+  }
 
-function showNetworkLogo(network){
-const logo=el("networkLogo");
-if(!logo) return;
+  const prefix=phone.substring(0,4);
 
-const logos={
-MTN:"images/Mtn.png",
-AIRTEL:"images/Airtel.png",
-GLO:"images/Glo.png",
-"9MOBILE":"images/9mobile.png"
-};
+  for(const net in NETWORK_PREFIX){
+    if(NETWORK_PREFIX[net].includes(prefix)){
+      return net;
+    }
+  }
 
-logo.src=logos[network]||"";
-logo.style.display=network?"block":"none";
-}
-
-/* PLAN VALIDITY */
-function formatValidity(v){
-if(!v) return "N/A";
-if(typeof v==="number") return `${v} days`;
-return v;
-}
-
-/* LOAD DATA PLANS */
-
-async function loadDataPlans(network){
-
-try{
-
-const res=await safeFetch(`${API}/api/plans?network=${network}`,{
-headers:{Authorization:`Bearer ${getToken()}`}
-});
-
-const plans=await res.json();
-
-const container=el("plans");
-if(!container) return;
-
-container.innerHTML="";
-
-plans.forEach(plan=>{
-
-const name=plan.plan||plan.name;
-const price=plan.price||plan.amount;
-const validity=formatValidity(plan.validity);
-const id=plan.plan_id||plan.id;
-
-const card=document.createElement("div");
-card.className="planCard";
-card.dataset.planId=id;
-
-card.innerHTML=`
-<h4>${name}</h4>
-<p>₦${price}</p>
-<p>Validity: ${validity}</p>
-<button onclick="purchasePlan('${id}')">Buy</button>
-`;
-
-container.appendChild(card);
-
-});
-
-}catch(e){
-showToast("Failed to load plans");
-}
-
+  return null;
 }
 
 /* PIN MODAL */
@@ -183,62 +157,64 @@ let selectedPlan=null;
 
 function openPinModal(type){
 
-const modal=el("pinModal");
-if(!modal) return;
+  const modal=el("pinModal");
+  if(!modal) return;
 
-modal.classList.remove("hidden");
+  modal.style.display="flex";
 
-const body=el("pinModalBody");
+  const body=el("pinModalBody");
 
-if(type==="setPin"){
+  if(type==="setPin"){
 
-body.innerHTML=`
-<input id="pinInput" maxlength="4" placeholder="4 digit PIN">
-<button onclick="savePin()">Save PIN</button>
-`;
+    body.innerHTML=`
+    <input id="pinInput" maxlength="4" placeholder="4 digit PIN">
+    <button onclick="savePin()">Save PIN</button>
+    `;
 
-}else{
+  }else{
 
-body.innerHTML=`
-<input id="pinInput" maxlength="4" placeholder="Enter PIN">
-<button onclick="confirmPurchase()">Confirm</button>
-`;
+    body.innerHTML=`
+    <input id="pinInput" maxlength="4" placeholder="Enter PIN">
+    <button onclick="confirmPurchase()">Confirm</button>
+    `;
 
-}
+  }
 
 }
 
 function closePinModal(){
-el("pinModal")?.classList.add("hidden");
+  el("pinModal").style.display="none";
 }
 
 /* SAVE PIN */
 
 function savePin(){
 
-const pin=el("pinInput").value;
+  const pin=el("pinInput").value;
 
-if(pin.length!==4) return showToast("Enter 4 digit PIN");
+  if(pin.length!==4){
+    showToast("Enter 4 digit PIN");
+    return;
+  }
 
-localStorage.setItem("userPin",pin);
+  localStorage.setItem("userPin",pin);
 
-showToast("PIN saved");
-
-closePinModal();
+  showToast("PIN saved");
+  closePinModal();
 
 }
 
-/* PURCHASE */
+/* PURCHASE PLAN */
 
 function purchasePlan(planId){
 
-selectedPlan=planId;
+  selectedPlan = planId;
 
-if(!localStorage.getItem("userPin")){
-openPinModal("setPin");
-}else{
-openPinModal("confirm");
-}
+  if(!localStorage.getItem("userPin")){
+    openPinModal("setPin");
+  }else{
+    openPinModal("confirm");
+  }
 
 }
 
@@ -246,43 +222,63 @@ openPinModal("confirm");
 
 async function confirmPurchase(){
 
-const pin=el("pinInput").value;
-const phone=el("phone")?.value;
+  const pin = el("pinInput").value;
+  const phone = el("phone")?.value;
 
-if(!pin) return showToast("Enter PIN");
-if(!phone) return showToast("Enter phone");
+  if(!pin){
+    showToast("Enter PIN");
+    return;
+  }
 
-try{
+  if(!phone){
+    showToast("Enter phone");
+    return;
+  }
 
-const res=await safeFetch(`${API}/api/buy-data`,{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-Authorization:`Bearer ${getToken()}`
-},
-body:JSON.stringify({plan_id:selectedPlan,phone,pin})
-});
+  try{
 
-const data=await res.json();
+    const res = await safeFetch(`${API}/api/buy-data`,{
 
-if(res.ok){
+      method:"POST",
 
-showToast("Purchase successful");
-successSound.play();
+      headers:{
+        "Content-Type":"application/json",
+        Authorization:`Bearer ${getToken()}`
+      },
 
-animateWallet(data.wallet_balance);
+      body:JSON.stringify({
+        plan_id:selectedPlan,
+        phone,
+        pin
+      })
 
-fetchTransactions();
+    });
 
-}else{
-showToast(data.error||"Purchase failed");
-}
+    const data = await res.json();
 
-}catch(e){
-showToast("Purchase error");
-}
+    if(res.ok){
 
-closePinModal();
+      showToast("Purchase successful");
+
+      successSound.play();
+
+      animateWallet(data.wallet_balance);
+
+      fetchTransactions();
+
+    }else{
+
+      showToast(data.error || "Purchase failed");
+
+    }
+
+  }catch(e){
+
+    showToast("Purchase error");
+
+  }
+
+  closePinModal();
 
 }
 
@@ -290,50 +286,53 @@ closePinModal();
 
 async function loadAdminTransactions(){
 
-try{
+  try{
 
-const res=await safeFetch(`${API}/api/admin/transactions`,{
-headers:{Authorization:`Bearer ${getToken()}`}
-});
+    const res = await safeFetch(`${API}/api/admin/transactions`,{
+      headers:{Authorization:`Bearer ${getToken()}`}
+    });
 
-if(!res.ok) return;
+    if(!res.ok) return;
 
-const txs=await res.json();
+    const txs = await res.json();
 
-const container=el("transactionHistoryAdmin");
-if(!container) return;
+    const container = el("transactionHistoryAdmin");
+    if(!container) return;
 
-container.innerHTML="";
+    container.innerHTML="";
 
-let profit=0;
+    let profit = 0;
 
-txs.slice(0,10).forEach(tx=>{
+    txs.slice(0,10).forEach(tx=>{
 
-profit+=Number(tx.profit||0);
+      profit += Number(tx.profit || 0);
 
-const div=document.createElement("div");
+      const div = document.createElement("div");
 
-div.className="transaction-card";
+      div.className="transaction-card";
 
-div.innerHTML=`
-<p><strong>${tx.type}</strong> - ₦${tx.amount}</p>
-<p>${tx.username}</p>
-<p>${tx.phone}</p>
-<p>${tx.date}</p>
-`;
+      div.innerHTML=`
+      <p><strong>${tx.type}</strong> - ₦${tx.amount}</p>
+      <p>${tx.username||""}</p>
+      <p>${tx.phone||""}</p>
+      <p>${tx.date||""}</p>
+      `;
 
-container.appendChild(div);
+      container.appendChild(div);
 
-});
+    });
 
-const profitEl=el("profitBalance");
-if(profitEl) profitEl.innerText=`₦${profit}`;
+    const profitEl = el("profitBalance");
 
-}catch(e){
+    if(profitEl){
+      profitEl.innerText=`₦${profit}`;
+    }
 
-showToast("Admin transactions failed");
+  }catch(e){
 
-}
+    showToast("Admin transactions failed");
+
+  }
 
 }
 
@@ -341,94 +340,97 @@ showToast("Admin transactions failed");
 
 async function loadDashboard(){
 
-const token=getToken();
+  const token = getToken();
 
-if(!token){
-window.location="login.html";
-return;
+  if(!token){
+    window.location="login.html";
+    return;
+  }
+
+  try{
+
+    const userReq = safeFetch(`${API}/api/me`,{
+      headers:{Authorization:`Bearer ${token}`}
+    });
+
+    const txReq = fetchTransactions();
+
+    const [userRes] = await Promise.all([userReq, txReq]);
+
+    if(!userRes.ok){
+      window.location="login.html";
+      return;
+    }
+
+    const user = await userRes.json();
+
+    if(el("usernameDisplay")){
+      el("usernameDisplay").innerText=`Hello ${user.username}`;
+    }
+
+    if(el("walletBalance")){
+      el("walletBalance").innerText=`₦${user.wallet_balance}`;
+    }
+
+    if(user.is_admin){
+
+      const adminPanel = el("adminPanel");
+
+      if(adminPanel){
+        adminPanel.style.display="block";
+      }
+
+      loadAdminTransactions();
+
+    }
+
+    if(!localStorage.getItem("userPin")){
+      setTimeout(()=>openPinModal("setPin"),1000);
+    }
+
+    connectWalletWebSocket();
+
+  }catch(e){
+
+    console.log("Dashboard error:",e);
+
+    showToast("Dashboard loading failed");
+
+  }
+
+  /* LOADER ALWAYS HIDE */
+
+  setTimeout(hideLoader,500);
+
 }
 
-try{
-
-const userReq=safeFetch(`${API}/api/me`,{
-headers:{Authorization:`Bearer ${token}`}
-});
-
-const txReq=fetchTransactions();
-
-const [userRes]=await Promise.all([userReq,txReq]);
-
-if(!userRes.ok){
-window.location="login.html";
-return;
-}
-
-const user=await userRes.json();
-
-if(el("usernameDisplay"))
-el("usernameDisplay").innerText=`Hello ${user.username}`;
-
-if(el("walletBalance"))
-el("walletBalance").innerText=`₦${user.wallet_balance}`;
-
-if(user.is_admin){
-el("adminPanel")?.classList.remove("hidden");
-loadAdminTransactions();
-}
-
-/* FIRST TIME PIN */
-
-if(!localStorage.getItem("userPin")){
-setTimeout(()=>openPinModal("setPin"),1000);
-}
-
-/* BIOMETRIC SUPPORT */
-
-if(window.PublicKeyCredential){
-localStorage.setItem("biometricEnabled","true");
-}
-
-/* LIVE WALLET */
-
-connectWalletWebSocket();
-
-}catch(e){
-
-showToast("Dashboard failed");
-
-console.log(e);
-
-}
-
-}
-
-/* WEBSOCKET (AUTO RECONNECT) */
+/* WEBSOCKET */
 
 let ws;
 
 function connectWalletWebSocket(){
 
-if(ws) ws.close();
+  if(ws) ws.close();
 
-ws=new WebSocket(`${API.replace(/^http/,"ws")}`);
+  ws = new WebSocket(`${API.replace(/^http/,"ws")}`);
 
-ws.onmessage=(msg)=>{
+  ws.onmessage = (msg)=>{
 
-const data=JSON.parse(msg.data);
+    const data = JSON.parse(msg.data);
 
-if(data.type==="wallet_update"){
+    if(data.type==="wallet_update"){
 
-animateWallet(data.balance);
+      animateWallet(data.balance);
 
-fetchTransactions();
+      fetchTransactions();
 
-}
+    }
 
-};
+  };
 
-ws.onclose=()=>{
-setTimeout(connectWalletWebSocket,5000);
-};
+  ws.onclose = ()=>{
+    setTimeout(connectWalletWebSocket,5000);
+  };
 
 }
 
@@ -436,9 +438,9 @@ setTimeout(connectWalletWebSocket,5000);
 
 function logout(){
 
-localStorage.removeItem("token");
+  localStorage.removeItem("token");
 
-window.location="login.html";
+  window.location="login.html";
 
 }
 

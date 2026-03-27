@@ -1,55 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MayConnect Admin Panel</title>
+
+<title>MayConnect Admin</title>
+
 <link rel="stylesheet" href="styles.css">
+
 </head>
+
 <body>
-<div id="dashboard">
-  <h1 id="usernameDisplay">Hello User</h1>
-  <p>Wallet Balance: <span id="walletBalance">₦0</span></p>
 
-  <!-- Admin Panel -->
-  <div id="adminPanel" class="hidden">
-    <h2>Admin Dashboard</h2>
+<h2 id="usernameDisplay">Hello Admin</h2>
 
-    <!-- Profit Summary -->
-    <div id="profitSection">
-      <p>Total Profit: <span id="profitBalance">₦0</span></p>
-      <button id="refreshProfit">Refresh</button>
-    </div>
+<p>Wallet Balance: <span id="walletBalance">₦0</span></p>
 
-    <!-- Withdraw Section -->
-    <div id="withdrawSection">
-      <h3>Withdraw Profit</h3>
-      <input type="number" id="withdrawAmount" placeholder="Enter amount to withdraw">
-      <input type="text" id="withdrawAccount" placeholder="Bank/Account info">
-      <button id="withdrawBtn">Submit Withdrawal</button>
-    </div>
+<div id="adminPanel">
 
-    <!-- Recent Transactions -->
-    <div id="adminTransactions">
-      <h3>Recent Transactions</h3>
-      <div id="transactionHistoryAdmin"></div>
-    </div>
-  </div>
+<h3>Total Profit</h3>
 
-  <!-- User Transaction History -->
-  <h3>My Recent Transactions</h3>
-  <div id="transactionHistory"></div>
+<p id="profitBalance">₦0</p>
 
-  <!-- PIN Modal -->
-  <div id="pinModal" class="hidden">
-    <h3 id="pinModalTitle"></h3>
-    <div id="pinModalBody"></div>
-    <button onclick="closePinModal()">Close</button>
-  </div>
+<button id="refreshProfit">Refresh</button>
 
-  <button onclick="logout()">Logout</button>
+<h3>Withdraw Profit</h3>
+
+<input id="withdrawAmount" placeholder="Amount">
+
+<input id="withdrawAccount" placeholder="Bank Account">
+
+<button id="withdrawBtn">Withdraw</button>
+
+<h3>Recent Transactions</h3>
+
+<div id="transactionHistoryAdmin"></div>
+
 </div>
 
+<h3>My Transactions</h3>
+
+<div id="transactionHistory"></div>
+
+<button onclick="logout()">Logout</button>
+
 <script src="app.js"></script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MayConnect Admin</title>
+
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+
+<h2 id="usernameDisplay">Hello Admin</h2>
+
+<p>Wallet Balance: <span id="walletBalance">₦0</span></p>
+
+<div id="adminPanel">
+
+<h3>Total Profit</h3>
+
+<p id="profitBalance">₦0</p>
+
+<button id="refreshProfit">Refresh</button>
+
+<h3>Withdraw Profit</h3>
+
+<input id="withdrawAmount" placeholder="Amount">
+
+<input id="withdrawAccount" placeholder="Bank Account">
+
+<button id="withdrawBtn">Withdraw</button>
+
+<h3>Recent Transactions</h3>
+
+<div id="transactionHistoryAdmin"></div>
+
+</div>
+
+<h3>My Transactions</h3>
+
+<div id="transactionHistory"></div>
+
+<button onclick="logout()">Logout</button>
+
+<script src="app.js"></script>
+
 </body>
 </html>
