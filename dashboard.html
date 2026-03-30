@@ -117,6 +117,11 @@ border-radius:10px;
 margin-top:10px;
 }
 
+.logoSmall{
+width:35px;
+margin-top:5px;
+}
+
 </style>
 </head>
 
@@ -160,9 +165,11 @@ margin-top:10px;
 <select id="networkSelect">
 <option value="">Select Network</option>
 <option value="MTN">MTN</option>
-<option value="AIRTEL">Airtel</option>
-<option value="GLO">Glo</option>
+<option value="Airtel">Airtel</option>
+<option value="Glo">Glo</option>
 </select>
+
+<img id="networkLogo" class="logoSmall">
 
 <input id="dataPhone" placeholder="Phone Number">
 
@@ -178,31 +185,19 @@ margin-top:10px;
 
 <h2>Airtime</h2>
 
-<div id="airtimeComing">
-
-<p style="text-align:center">
-Airtime service coming soon
-</p>
-
-</div>
-
-<div id="airtimeForm" style="display:none">
-
 <select id="airtimeNetwork">
-
 <option>MTN</option>
-<option>AIRTEL</option>
-<option>GLO</option>
-
+<option>Airtel</option>
+<option>Glo</option>
 </select>
+
+<img id="airtimeLogo" class="logoSmall">
 
 <input id="airtimePhone" placeholder="Phone Number">
 
 <input id="airtimeAmount" placeholder="Amount">
 
 <button onclick="openPinModal('airtime')">Buy Airtime</button>
-
-</div>
 
 </section>
 
@@ -252,15 +247,67 @@ Airtime service coming soon
 
 <!-- ADMIN -->
 
-<section id="admin" class="section">
+<section id="admin" class="section" style="display:none">
 
 <h2>Admin Panel</h2>
 
-<input id="searchUser" placeholder="Search user">
+<div class="adminCard">
+
+<h3>Total Profit</h3>
+
+<p id="adminTotalProfit">₦0</p>
+
+</div>
+
+<div class="adminCard">
+
+<input id="searchUser" placeholder="Search user by username">
 
 <button onclick="searchUser()">Search</button>
 
 <div id="adminUsers"></div>
+
+</div>
+
+<div class="adminCard">
+
+<h3>Wallet Actions</h3>
+
+<input id="adminUserId" placeholder="User ID">
+
+<input id="creditAmount" placeholder="Credit Amount">
+
+<button onclick="creditUser()">Credit Wallet</button>
+
+<input id="debitAmount" placeholder="Debit Amount">
+
+<button onclick="debitUser()">Debit Wallet</button>
+
+</div>
+
+<div class="adminCard">
+
+<h3>Approve Deposit</h3>
+
+<input id="depositId" placeholder="Deposit ID">
+
+<button onclick="approveDeposit()">Approve Deposit</button>
+
+</div>
+
+<div class="adminCard">
+
+<h3>Withdraw Profit</h3>
+
+<input id="withdrawAmount" placeholder="Amount">
+
+<input id="withdrawBank" placeholder="Bank Name">
+
+<input id="withdrawAccount" placeholder="Account Number">
+
+<button onclick="withdrawProfit()">Withdraw</button>
+
+</div>
 
 </section>
 
@@ -330,11 +377,18 @@ function closePinModal(){
 
 document.getElementById("pinModal").style.display="none"
 
+document.getElementById("pinInput").value=""
+
 }
 
 function confirmPurchase(){
 
 const pin=document.getElementById("pinInput").value
+
+if(!pin){
+alert("Enter PIN")
+return
+}
 
 if(purchaseType==="data"){
 buyData(pin)
