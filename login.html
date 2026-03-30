@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
+<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MAY CONNECT - Login</title>
-
-<style>
+<title>MAY CONNECT - Login</title><style>
 
 *{
 margin:0;
@@ -149,56 +144,33 @@ text-decoration:none;
 display:block;
 }
 
-</style>
-</head>
-
-<body>
-
-<!-- LOGIN LOADER -->
-
-<div id="loginLoader">
+</style></head><body><!-- LOGIN LOADER --><div id="loginLoader">
 <div class="loaderRing"></div>
 <p style="margin-top:15px">Logging in...</p>
-</div>
-
-<img src="images/logo.png" class="logo">
-
-<div class="card">
-
-<div class="title">Welcome Back</div>
-
-<div class="inputBox">
+</div><img src="images/logo.png" class="logo"><div class="card"><div class="title">Welcome Back</div><div class="inputBox">
 <input id="loginUsername" placeholder="Username">
-</div>
-
-<div class="inputBox">
+</div><div class="inputBox">
 <input id="loginPassword" type="password" placeholder="Password">
 <button class="showBtn" onclick="togglePassword()">Show</button>
-</div>
-
-<button id="loginBtn" class="loginBtn" onclick="login()">Login</button>
+</div><button id="loginBtn" class="loginBtn">Login</button>
 
 <div class="biometric" onclick="biometricLogin()">
 🔐 Login with Fingerprint / Face ID
-</div>
-
-<a href="signup.html">
+</div><a href="signup.html">
 <div class="signup">
 Create Account
 </div>
-</a>
+</a></div><script>
 
-</div>
+/* API */
 
-<script src="app.js"></script>
+const API="https://mayconnect-backend-1.onrender.com"
 
-<script>
+/* AUTO LOGIN */
 
-/* WAIT FOR PAGE LOAD */
+window.addEventListener("load",()=>{
 
-document.addEventListener("DOMContentLoaded", function(){
-
-const token = localStorage.getItem("token")
+const token=localStorage.getItem("token")
 
 if(token){
 window.location.href="dashboard.html"
@@ -206,19 +178,19 @@ window.location.href="dashboard.html"
 
 })
 
-/* TOGGLE PASSWORD */
+/* PASSWORD TOGGLE */
 
 function togglePassword(){
 
 const pass=document.getElementById("loginPassword")
 
-if(pass.type==="password"){
-pass.type="text"
-}else{
-pass.type="password"
-}
+pass.type = pass.type==="password" ? "text" : "password"
 
 }
+
+/* LOGIN BUTTON */
+
+document.getElementById("loginBtn").addEventListener("click",login)
 
 /* LOGIN FUNCTION */
 
@@ -226,6 +198,7 @@ async function login(){
 
 const username=document.getElementById("loginUsername").value.trim()
 const password=document.getElementById("loginPassword").value.trim()
+
 const loader=document.getElementById("loginLoader")
 const btn=document.getElementById("loginBtn")
 
@@ -241,23 +214,21 @@ loader.style.display="flex"
 
 try{
 
-const res=await fetch("https://mayconnect-backend-1.onrender.com/api/login",{
+const res=await fetch(API+"/api/login",{
 
 method:"POST",
-headers:{ "Content-Type":"application/json" },
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({username,password})
 
 })
 
-const text=await res.text()
-
-let data
-
-try{
-data=JSON.parse(text)
-}catch{
-throw new Error("Server returned invalid JSON")
+if(!res.ok){
+throw new Error("Server error")
 }
+
+const data=await res.json()
 
 if(data.token){
 
@@ -267,19 +238,16 @@ window.location.href="dashboard.html"
 
 }else{
 
-loader.style.display="none"
-btn.disabled=false
-
-alert(data.message || "Login failed")
+throw new Error(data.message || "Login failed")
 
 }
 
 }catch(err){
 
+alert(err.message || "Server offline")
+
 loader.style.display="none"
 btn.disabled=false
-
-alert("Network error or server offline")
 
 }
 
@@ -316,7 +284,7 @@ return
 try{
 
 const challenge=new Uint8Array(32)
-window.crypto.getRandomValues(challenge)
+crypto.getRandomValues(challenge)
 
 await navigator.credentials.get({
 publicKey:{
@@ -330,7 +298,7 @@ document.getElementById("loginLoader").style.display="flex"
 
 setTimeout(()=>{
 window.location.href="dashboard.html"
-},600)
+},500)
 
 }catch{
 
@@ -340,7 +308,5 @@ alert("Biometric verification failed")
 
 }
 
-</script>
-
-</body>
+</script></body>
 </html>
