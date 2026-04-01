@@ -26,7 +26,7 @@ height:100vh;
 flex-direction:column;
 }
 
-/* LOGIN SPLASH */
+/* LOADER */
 
 #loginLoader{
 position:fixed;
@@ -104,7 +104,6 @@ transform:translateY(-50%);
 background:none;
 border:none;
 color:#4da3ff;
-font-size:14px;
 cursor:pointer;
 }
 
@@ -122,7 +121,6 @@ cursor:pointer;
 
 .loginBtn:disabled{
 opacity:0.6;
-cursor:not-allowed;
 }
 
 .biometric{
@@ -132,7 +130,6 @@ padding:16px;
 border-radius:12px;
 text-align:center;
 cursor:pointer;
-font-size:16px;
 }
 
 .signup{
@@ -141,7 +138,6 @@ border:2px solid #3b78e7;
 padding:14px;
 border-radius:12px;
 text-align:center;
-cursor:pointer;
 }
 
 a{
@@ -151,11 +147,10 @@ display:block;
 }
 
 </style>
+
 </head>
 
 <body>
-
-<!-- LOGIN LOADER -->
 
 <div id="loginLoader">
 <div class="loaderRing"></div>
@@ -184,170 +179,12 @@ display:block;
 </div>
 
 <a href="signup.html">
-<div class="signup">
-Create Account
-</div>
+<div class="signup">Create Account</div>
 </a>
 
 </div>
 
-<script>
-
-/* API */
-
-const API="https://mayconnect-backend-1.onrender.com"
-
-/* SUCCESS SOUND */
-
-const welcomeSound=new Audio("welcome.mp3")
-
-/* AUTO LOGIN CHECK */
-
-window.addEventListener("load",()=>{
-
-const token=localStorage.getItem("token")
-
-if(token){
-window.location.href="dashboard.html"
-}
-
-})
-
-/* PASSWORD TOGGLE */
-
-function togglePassword(){
-
-const pass=document.getElementById("loginPassword")
-
-pass.type = pass.type==="password" ? "text" : "password"
-
-}
-
-/* LOGIN BUTTON */
-
-document.getElementById("loginBtn").addEventListener("click",login)
-
-/* LOGIN FUNCTION */
-
-async function login(){
-
-const username=document.getElementById("loginUsername").value.trim()
-const password=document.getElementById("loginPassword").value.trim()
-
-const loader=document.getElementById("loginLoader")
-const btn=document.getElementById("loginBtn")
-
-if(!username || !password){
-
-alert("Enter username and password")
-return
-
-}
-
-btn.disabled=true
-loader.style.display="flex"
-
-try{
-
-const res=await fetch(API+"/api/login",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({username,password})
-})
-
-const data=await res.json()
-
-if(!res.ok){
-
-throw new Error(data.message || "Login failed")
-
-}
-
-if(data.token){
-
-localStorage.setItem("token",data.token)
-
-welcomeSound.play()
-
-setTimeout(()=>{
-window.location.href="dashboard.html"
-},700)
-
-}else{
-
-throw new Error("Invalid server response")
-
-}
-
-}catch(err){
-
-alert(err.message || "Server offline")
-
-loader.style.display="none"
-btn.disabled=false
-
-}
-
-}
-
-/* BIOMETRIC LOGIN */
-
-async function biometricLogin(){
-
-const biometricEnabled=localStorage.getItem("biometric")
-const token=localStorage.getItem("token")
-
-if(biometricEnabled!=="true"){
-
-alert("Enable biometric inside dashboard first")
-return
-
-}
-
-if(!token){
-
-alert("Login normally first before using biometric")
-return
-
-}
-
-if(!window.PublicKeyCredential){
-
-alert("Biometric not supported on this device")
-return
-
-}
-
-try{
-
-const challenge=new Uint8Array(32)
-crypto.getRandomValues(challenge)
-
-await navigator.credentials.get({
-publicKey:{
-challenge,
-timeout:60000,
-userVerification:"preferred"
-}
-})
-
-document.getElementById("loginLoader").style.display="flex"
-
-setTimeout(()=>{
-window.location.href="dashboard.html"
-},500)
-
-}catch{
-
-alert("Biometric verification failed")
-
-}
-
-}
-
-</script>
+<script src="login.js"></script>
 
 </body>
 </html>
