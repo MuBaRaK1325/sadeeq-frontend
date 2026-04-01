@@ -1,41 +1,56 @@
 const backendUrl="https://mayconnect-backend-1.onrender.com";
 
-const form=document.getElementById("signupForm");
-const name=document.getElementById("signup-name");
-const email=document.getElementById("signup-email");
-const password=document.getElementById("signup-password");
-const loader=document.getElementById("splashLoader");
+async function signup(){
 
-form.addEventListener("submit",async e=>{
- e.preventDefault();
+const username=document.getElementById("username").value.trim();
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value.trim();
+const pin=document.getElementById("pin").value.trim();
 
- if(!name.value||!email.value||!password.value){
-  alert("All fields required");
-  return;
- }
+if(!username || !email || !password || !pin){
+alert("All fields required");
+return;
+}
 
- loader.classList.remove("hidden");
+if(pin.length < 4){
+alert("PIN must be at least 4 digits");
+return;
+}
 
- try{
-  const res=await fetch(`${backendUrl}/api/signup`,{
-   method:"POST",
-   headers:{ "Content-Type":"application/json" },
-   body:JSON.stringify({
-     name:name.value.trim(),
-     email:email.value.trim(),
-     password:password.value.trim()
-   })
-  });
+try{
 
-  const data=await res.json();
-  if(!res.ok) throw new Error(data.error);
+const res=await fetch(`${backendUrl}/api/signup`,{
 
-  alert("Signup success");
-  location.href="login.html";
+method:"POST",
 
- }catch(err){
-  alert(err.message);
- }finally{
-  loader.classList.add("hidden");
- }
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+username,
+email,
+password,
+pin
+})
+
 });
+
+const data=await res.json();
+
+if(!res.ok){
+alert(data.message || "Signup failed");
+return;
+}
+
+alert("Account created successfully");
+
+location.href="login.html";
+
+}catch(err){
+
+alert("Server error");
+
+}
+
+}
