@@ -5,6 +5,7 @@ const successSound=new Audio("sounds/success.mp3")
 
 let cachedPlans=[]
 let currentBalance=0
+let currentUser=null
 let ws
 
 /* ================= HELPERS ================= */
@@ -18,9 +19,7 @@ return document.getElementById(id)
 }
 
 function showToast(msg){
-
 const t=document.createElement("div")
-
 t.innerText=msg
 
 Object.assign(t.style,{
@@ -32,74 +31,27 @@ background:"#000",
 padding:"12px 20px",
 borderRadius:"8px",
 color:"#fff",
-zIndex:"9999",
-fontSize:"14px"
+zIndex:"9999"
 })
 
 document.body.appendChild(t)
-
 setTimeout(()=>t.remove(),3000)
-
 }
 
-/* ================= NETWORK ================= */
+/* ================= REDIRECT (WELCOME PAGE) ================= */
 
-const networkPrefixes={
-MTN:["0803","0806","0703","0706","0813","0816","0810","0814","0903","0906"],
-Airtel:["0802","0808","0708","0812","0701","0902","0907"],
-Glo:["0805","0705","0815","0811","0905"]
+if(!location.pathname.includes("index.html")){
+if(!getToken()){
+location.href="index.html"
 }
-
-const networkLogos={
-MTN:"images/mtn.png",
-Airtel:"images/airtel.png",
-Glo:"images/glo.png"
 }
 
 /* ================= WALLET ================= */
 
 function animateWallet(balance){
-
 currentBalance=Number(balance||0)
-
 if(el("walletBalance"))
 el("walletBalance").innerText="₦"+currentBalance.toLocaleString()
-
-}
-
-/* ================= BIOMETRIC ================= */
-
-async function biometricAuth(){
-
-if(localStorage.getItem("biometric")!=="true") return true
-
-if(!window.PublicKeyCredential){
-showToast("Biometric not supported")
-return true
-}
-
-try{
-
-const challenge=new Uint8Array(32)
-crypto.getRandomValues(challenge)
-
-await navigator.credentials.get({
-publicKey:{
-challenge,
-timeout:60000,
-userVerification:"preferred"
-}
-})
-
-return true
-
-}catch{
-
-showToast("Biometric verification failed")
-return false
-
-}
-
 }
 
 /* ================= DASHBOARD ================= */
@@ -109,7 +61,7 @@ async function loadDashboard(){
 const token=getToken()
 
 if(!token){
-location="login.html"
+location="index.html"
 return
 }
 
@@ -122,16 +74,17 @@ headers:{Authorization:"Bearer "+token}
 if(!res.ok) throw new Error()
 
 const user=await res.json()
+currentUser=user
 
 el("usernameDisplay").innerText="Hello "+user.username
 
 animateWallet(user.wallet_balance)
 
-try{welcomeSound.play()}catch{}
-
 if(user.is_admin && el("admin")){
 el("admin").style.display="block"
 }
+
+try{welcomeSound.play()}catch{}
 
 fetchTransactions()
 loadPlans()
@@ -146,7 +99,6 @@ logout()
 }
 
 document.body.style.display="block"
-
 }
 
 /* ================= TRANSACTIONS ================= */
@@ -162,25 +114,19 @@ headers:{Authorization:"Bearer "+getToken()}
 const tx=await res.json()
 
 const container=el("transactionHistory")
-
 if(!container) return
 
 container.innerHTML=""
 
 tx.slice(0,5).forEach(t=>{
 
-const statusColor=
-t.status==="SUCCESS"?"#2ecc71":
-t.status==="PENDING"?"#f1c40f":"#e74c3c"
-
 const div=document.createElement("div")
-
 div.className="transactionCard"
 
 div.innerHTML=`
 <strong>${t.type}</strong> ₦${t.amount}<br>
 ${t.phone||""}<br>
-<span style="color:${statusColor}">${t.status}</span><br>
+<span>${t.status}</span><br>
 <button onclick='showReceipt(${JSON.stringify(t)})'>Receipt</button>
 `
 
@@ -189,24 +135,29 @@ container.appendChild(div)
 })
 
 }catch{}
-
 }
 
-/* ================= DATA PLANS ================= */
+/* ================= LOAD PLANS ================= */
 
 async function loadPlans(){
 
 try{
 
 const res=await fetch(API+"/api/plans")
+const allPlans=await res.json()
 
-cachedPlans=await res.json()
+/* ✅ FILTER BY COMPANY */
+cachedPlans = allPlans.filter(p=>p.company === currentUser.company)
 
 updatePlans()
 
-}catch{}
+}catch{
+showToast("Failed to load plans")
+}
 
 }
+
+/* ================= UPDATE PLANS ================= */
 
 function updatePlans(){
 
@@ -221,10 +172,12 @@ cachedPlans
 .filter(p=>!network || p.network===network)
 .forEach(plan=>{
 
-const opt=document.createElement("option")
+/* ✅ TOP USER PRICE */
+const price = currentUser.top_user ? plan.cost : plan.price
 
+const opt=document.createElement("option")
 opt.value=plan.id
-opt.textContent=`${plan.name} - ₦${plan.price}`
+opt.textContent=`${plan.name} - ₦${price}`
 
 select.appendChild(opt)
 
@@ -234,33 +187,40 @@ select.appendChild(opt)
 
 /* ================= NETWORK DETECTION ================= */
 
+const prefixes={
+MTN:["0803","0806","0703","0706","0813","0816","0810","0814","0903","0906"],
+Airtel:["0802","0808","0708","0812","0701","0902","0907"],
+Glo:["0805","0705","0815","0811","0905"]
+}
+
+const logos={
+MTN:"images/mtn.png",
+Airtel:"images/airtel.png",
+Glo:"images/glo.png"
+}
+
 function detectNetwork(phone){
 
 const prefix=phone.substring(0,4)
 
-for(const net in networkPrefixes){
-if(networkPrefixes[net].includes(prefix)) return net
+for(const n in prefixes){
+if(prefixes[n].includes(prefix)) return n
 }
 
 return null
-
 }
 
-function handlePhoneInput(inputId,networkSelectId,logoId){
+function handlePhoneInput(input,select,logo){
 
-const phone=el(inputId)?.value
-
+const phone=el(input)?.value
 if(!phone || phone.length<4) return
 
 const net=detectNetwork(phone)
 
 if(net){
 
-if(el(networkSelectId))
-el(networkSelectId).value=net
-
-if(el(logoId))
-el(logoId).src=networkLogos[net]
+if(el(select)) el(select).value=net
+if(el(logo)) el(logo).src=logos[net]
 
 updatePlans()
 
@@ -281,8 +241,9 @@ return
 }
 
 const plan=cachedPlans.find(p=>p.id==planId)
+const price = currentUser.top_user ? plan.cost : plan.price
 
-if(plan && currentBalance<plan.price){
+if(currentBalance < price){
 showToast("Insufficient balance")
 return
 }
@@ -293,16 +254,12 @@ if(!bio) return
 try{
 
 const res=await fetch(API+"/api/buy-data",{
-
 method:"POST",
-
 headers:{
 "Content-Type":"application/json",
 Authorization:"Bearer "+getToken()
 },
-
 body:JSON.stringify({phone,plan_id:planId,pin})
-
 })
 
 const data=await res.json()
@@ -310,24 +267,17 @@ const data=await res.json()
 if(res.ok && data.success){
 
 successSound.play()
-
-animateWallet(currentBalance-plan.price)
-
-showToast("Data purchase successful")
+animateWallet(currentBalance-price)
+showToast("Data successful")
 
 fetchTransactions()
-showReceipt(data.transaction)
 
 }else{
-
-showToast(data.message||"Purchase failed")
-
+showToast(data.message||"Failed")
 }
 
 }catch{
-
 showToast("Network error")
-
 }
 
 }
@@ -355,16 +305,12 @@ if(!bio) return
 try{
 
 const res=await fetch(API+"/api/buy-airtime",{
-
 method:"POST",
-
 headers:{
 "Content-Type":"application/json",
 Authorization:"Bearer "+getToken()
 },
-
 body:JSON.stringify({phone,amount,pin})
-
 })
 
 const data=await res.json()
@@ -372,157 +318,50 @@ const data=await res.json()
 if(res.ok && data.success){
 
 successSound.play()
-
 animateWallet(currentBalance-amount)
-
 showToast("Airtime sent")
 
 fetchTransactions()
-showReceipt(data.transaction)
 
 }else{
-
-showToast(data.message||"Purchase failed")
-
+showToast(data.message||"Failed")
 }
 
 }catch{
-
 showToast("Network error")
-
 }
 
 }
 
-/* ================= RECEIPT ================= */
+/* ================= BIOMETRIC ================= */
 
-function showReceipt(t){
+async function biometricAuth(){
 
-if(!t) return
+if(localStorage.getItem("biometric")!=="true") return true
 
-const text=`
-MAY CONNECT RECEIPT
-
-Type: ${t.type}
-Amount: ₦${t.amount}
-Phone: ${t.phone||"-"}
-Status: ${t.status}
-Reference: ${t.reference||"-"}
-Date: ${new Date(t.created_at).toLocaleString()}
-`
-
-alert(text)
-
-}
-
-/* ================= ACCOUNT ================= */
-
-async function changePassword(){
-
-const oldPassword=prompt("Enter current password")
-const newPassword=prompt("Enter new password")
-
-if(!oldPassword||!newPassword) return
-
-try{
-
-const res=await fetch(API+"/api/change-password",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json",
-Authorization:"Bearer "+getToken()
-},
-
-body:JSON.stringify({oldPassword,newPassword})
-
-})
-
-const data=await res.json()
-
-showToast(data.message||"Password updated")
-
-}catch{
-
-showToast("Error updating password")
-
-}
-
-}
-
-async function changePin(){
-
-const oldPin=prompt("Enter old PIN")
-const newPin=prompt("Enter new PIN")
-
-if(!oldPin||!newPin) return
-
-try{
-
-const res=await fetch(API+"/api/change-pin",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json",
-Authorization:"Bearer "+getToken()
-},
-
-body:JSON.stringify({oldPin,newPin})
-
-})
-
-const data=await res.json()
-
-showToast(data.message||"PIN updated")
-
-}catch{
-
-showToast("Error updating PIN")
-
-}
-
-}
-
-/* ================= ADMIN ================= */
-
-async function withdrawProfit(){
-
-const amount=el("withdrawAmount").value
-const bank=el("withdrawBank").value
-const account=el("withdrawAccount").value
-
-if(!amount||!bank||!account){
-showToast("Fill all fields")
-return
+if(!window.PublicKeyCredential){
+showToast("Not supported")
+return true
 }
 
 try{
 
-const res=await fetch(API+"/api/admin/withdraw-profit",{
+const challenge=new Uint8Array(32)
+crypto.getRandomValues(challenge)
 
-method:"POST",
-
-headers:{
-"Content-Type":"application/json",
-Authorization:"Bearer "+getToken()
-},
-
-body:JSON.stringify({amount,bank,account})
-
+await navigator.credentials.get({
+publicKey:{
+challenge,
+timeout:60000,
+userVerification:"preferred"
+}
 })
 
-const data=await res.json()
-
-showToast(data.message||"Withdrawal processed")
-
-loadAdminProfit()
+return true
 
 }catch{
-
-showToast("Withdrawal failed")
-
+showToast("Biometric failed")
+return false
 }
 
 }
@@ -535,19 +374,17 @@ const token=getToken()
 
 try{
 
-ws=new WebSocket(API.replace(/^http/,"ws")+"?token="+token)
+const wsURL = API.replace("https","wss").replace("http","ws")
+
+ws=new WebSocket(wsURL+"?token="+token)
 
 ws.onmessage=(msg)=>{
-
 const data=JSON.parse(msg.data)
 
 if(data.type==="wallet_update"){
-
 animateWallet(data.balance)
 fetchTransactions()
-
 }
-
 }
 
 ws.onclose=()=>{
@@ -558,7 +395,7 @@ setTimeout(connectWalletWebSocket,5000)
 
 }
 
-/* ================= ADMIN PROFIT ================= */
+/* ================= ADMIN ================= */
 
 async function loadAdminProfit(){
 
@@ -571,35 +408,16 @@ headers:{Authorization:"Bearer "+getToken()}
 })
 
 const data=await res.json()
-
 el("adminTotalProfit").innerText="₦"+(data.total_profit||0)
 
 }catch{}
-
-}
-
-setInterval(loadAdminProfit,30000)
-
-/* ================= BIOMETRIC ================= */
-
-function toggleBiometric(){
-
-const enabled=localStorage.getItem("biometric")==="true"
-
-localStorage.setItem("biometric",!enabled)
-
-showToast(!enabled?"Biometric enabled":"Biometric disabled")
-
 }
 
 /* ================= LOGOUT ================= */
 
 function logout(){
-
 localStorage.removeItem("token")
-
-location="login.html"
-
+location="index.html"
 }
 
 /* ================= START ================= */
