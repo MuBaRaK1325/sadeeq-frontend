@@ -42,7 +42,7 @@ setTimeout(()=>t.remove(),3000)
 /* ================= AUTH CHECK ================= */
 
 if(!getToken()){
-window.location.href="index.html"
+window.location.replace("index.html")
 }
 
 /* ================= DASHBOARD ================= */
@@ -50,7 +50,6 @@ window.location.href="index.html"
 async function loadDashboard(){
 
 const token=getToken()
-
 if(!token){
 logout()
 return
@@ -59,18 +58,19 @@ return
 try{
 
 /* SAFE TOKEN DECODE */
-let payload=null
+let payload
 try{
 payload = JSON.parse(atob(token.split(".")[1]))
 }catch{
-throw new Error("Invalid token")
+throw new Error("Bad token")
 }
 
 currentUser = payload
 
-/* UI LOAD FIRST (prevents stuck screen) */
+/* SHOW UI FIRST (fixes blank/scatter) */
 document.body.style.display="block"
 
+/* USERNAME */
 if(el("usernameDisplay")){
 el("usernameDisplay").innerText="Hello "+payload.username
 }
@@ -80,17 +80,19 @@ if(payload.is_admin && el("admin")){
 el("admin").style.display="block"
 }
 
-/* PLAY SOUND ONLY ONCE */
+/* SOUND ONCE */
 if(!hasPlayedWelcome){
 welcomeSound.play().catch(()=>{})
 hasPlayedWelcome=true
 }
 
-/* LOAD DATA (safe) */
+/* LOAD DATA (non-blocking) */
 fetchTransactions()
 loadPlans()
 loadAdminProfit()
-connectWebSocket()
+
+/* DELAY WS (prevents freeze) */
+setTimeout(connectWebSocket,1000)
 
 }catch(err){
 
@@ -127,12 +129,10 @@ if(!res.ok) return
 
 const tx=await res.json()
 
-/* SAFE WALLET UPDATE */
 if(tx.length && tx[0].wallet_balance !== undefined){
 animateWallet(tx[0].wallet_balance)
 }
 
-/* HOME */
 const home=el("transactionHistory")
 if(home){
 home.innerHTML=""
@@ -149,7 +149,6 @@ home.appendChild(div)
 })
 }
 
-/* ALL */
 const all=el("allTransactions")
 if(all){
 all.innerHTML=""
@@ -167,7 +166,7 @@ all.appendChild(div)
 }
 
 }catch(err){
-console.log("Transactions error", err)
+console.log("TX error", err)
 }
 
 }
@@ -310,18 +309,6 @@ console.log(err)
 
 }
 
-function changePassword(){
-const newPass=prompt("Enter new password")
-if(!newPass) return
-showToast("Feature coming soon")
-}
-
-function changePin(){
-const newPin=prompt("Enter new PIN")
-if(!newPin) return
-showToast("Feature coming soon")
-}
-
 function toggleBiometric(){
 const current=localStorage.getItem("biometric")==="true"
 localStorage.setItem("biometric",(!current).toString())
@@ -331,6 +318,8 @@ showToast("Biometric "+(!current?"Enabled":"Disabled"))
 /* ================= WEBSOCKET ================= */
 
 function connectWebSocket(){
+
+if(ws) ws.close()
 
 try{
 
@@ -367,7 +356,8 @@ if(ws) ws.close()
 
 localStorage.clear()
 
-window.location.href="index.html"
+/* HARD REDIRECT (fixes sticking) */
+window.location.replace("index.html")
 
 }
 
