@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
-/* (YOUR STYLE REMAINS SAME - NO CHANGE) */
+
 body{
 margin:0;
 background:#000;
@@ -16,11 +16,207 @@ display:none;
 padding-bottom:120px;
 }
 
-/* KEEP ALL YOUR CSS EXACTLY SAME */
+/* HEADER */
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px;
+}
+
+/* LOGO */
+.logo img{
+width:80px;
+border-radius:50%;
+border:3px solid #3b78e7;
+padding:4px;
+}
+
+/* WALLET */
+.walletCard{
+margin:20px;
+padding:20px;
+border-radius:16px;
+text-align:center;
+background:linear-gradient(135deg,#3b78e7,#274ea3);
+}
+
+.walletCard strong{
+font-size:30px;
+}
+
+/* SECTIONS */
+.section{
+display:none;
+padding:20px;
+}
+
+.section.active{
+display:block;
+}
+
+/* FORM */
+input,select{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:8px;
+border:none;
+}
+
+button{
+background:#3b78e7;
+border:none;
+padding:12px;
+border-radius:10px;
+color:white;
+margin-top:10px;
+width:100%;
+cursor:pointer;
+}
+
+/* TRANSACTIONS */
+.transactionCard{
+background:#08142c;
+padding:12px;
+border-radius:10px;
+margin-top:10px;
+}
+
+/* NAV */
+.bottomNav{
+position:fixed;
+bottom:0;
+width:100%;
+background:#050b18;
+display:flex;
+justify-content:space-around;
+padding:10px 0;
+}
+
+.bottomNav button{
+background:none;
+border:none;
+color:white;
+font-size:14px;
+}
+
+/* PIN MODAL */
+.pinModal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.9);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:5000;
+}
+
+.pinBox{
+background:#0c1a36;
+padding:20px;
+border-radius:10px;
+width:85%;
+max-width:400px;
+}
+
+/* RECEIPT MODAL */
+#receiptModal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.9);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:6000;
+}
+
+.receiptBox{
+background:#0c1a36;
+padding:20px;
+border-radius:10px;
+width:85%;
+max-width:400px;
+}
+
+/* ADMIN */
+.adminCard{
+background:#08142c;
+padding:15px;
+border-radius:10px;
+margin-top:10px;
+}
+
+/* NETWORK LOGO */
+.logoSmall{
+width:40px;
+margin-top:10px;
+}
+
+/* CHAT */
+.chatBtn{
+position:fixed;
+right:15px;
+bottom:90px;
+background:#25D366;
+padding:14px 18px;
+border-radius:30px;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+/* FOOTER */
+footer{
+text-align:center;
+margin-top:40px;
+font-size:13px;
+opacity:0.8;
+}
+
+/* LOADER */
+#loader{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000;
+display:none;
+align-items:center;
+justify-content:center;
+z-index:9999;
+}
+
+.spinner{
+width:50px;
+height:50px;
+border:5px solid #222;
+border-top:5px solid #3b78e7;
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+
 </style>
 </head>
 
 <body>
+
+<!-- LOADER -->
+<div id="loader">
+<div class="spinner"></div>
+</div>
 
 <header>
 <div class="logo">
@@ -46,7 +242,6 @@ padding-bottom:120px;
 
 <!-- DATA -->
 <section id="data" class="section">
-
 <h2>Buy Data</h2>
 
 <select id="networkSelect">
@@ -63,12 +258,10 @@ padding-bottom:120px;
 <select id="planSelect"></select>
 
 <button onclick="openPinModal('data')">Buy Data</button>
-
 </section>
 
 <!-- AIRTIME -->
 <section id="airtime" class="section">
-
 <h2>Buy Airtime</h2>
 
 <select id="airtimeNetwork">
@@ -83,13 +276,6 @@ padding-bottom:120px;
 <input id="airtimeAmount" placeholder="Amount">
 
 <button onclick="openPinModal('airtime')">Buy Airtime</button>
-
-</section>
-
-<!-- FUND -->
-<section id="fund" class="section">
-<h2>Fund Wallet</h2>
-<p>Virtual account will appear here when enabled.</p>
 </section>
 
 <!-- TRANSACTIONS -->
@@ -113,33 +299,34 @@ padding-bottom:120px;
 <h3>Total Profit</h3>
 <p id="adminTotalProfit">₦0</p>
 </div>
-
 </section>
 
 <!-- PIN MODAL -->
 <div id="pinModal" class="pinModal">
 <div class="pinBox">
-
 <h3>Confirm Purchase</h3>
-
 <input id="pinInput" type="password" placeholder="Enter PIN">
-
 <button onclick="confirmPurchase()">Confirm With PIN</button>
 <button onclick="confirmBiometric()">Confirm With Biometrics</button>
 <button onclick="closePinModal()">Cancel</button>
+</div>
+</div>
 
+<!-- RECEIPT MODAL -->
+<div id="receiptModal">
+<div class="receiptBox">
+<h3>Transaction Receipt</h3>
+<div id="receiptContent"></div>
+<button onclick="closeReceipt()">Close</button>
 </div>
 </div>
 
 <!-- CHAT -->
-<div class="chatBtn" onclick="openChat()">
-Chat Support
-</div>
+<div class="chatBtn" onclick="openChat()">Chat Support</div>
 
 <footer>
 © MAYCONNECT TECHNOLOGIES NIG LTD  
-<br>
-Developed by MayConnect
+<br>Developed by MayConnect
 </footer>
 
 <div class="bottomNav">
@@ -152,15 +339,12 @@ Developed by MayConnect
 <script src="app.js"></script>
 
 <script>
+let purchaseType=""
 
-/* ================= NAV ================= */
 function showSection(id){
 document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"))
 document.getElementById(id).classList.add("active")
 }
-
-/* ================= PIN MODAL ================= */
-let purchaseType=""
 
 function openPinModal(type){
 purchaseType=type
@@ -172,55 +356,28 @@ document.getElementById("pinModal").style.display="none"
 document.getElementById("pinInput").value=""
 }
 
-/* ================= CONFIRM ================= */
 function confirmPurchase(){
-
 const pin=document.getElementById("pinInput").value
-
-if(!pin){
-alert("Enter PIN")
-return
-}
-
+if(!pin){ alert("Enter PIN"); return }
 if(purchaseType==="data") buyData(pin)
 if(purchaseType==="airtime") buyAirtime(pin)
-
 closePinModal()
 }
 
-/* ================= BIOMETRIC ================= */
 async function confirmBiometric(){
-
-if(!window.PublicKeyCredential){
-alert("Biometric not supported")
-return
-}
-
 try{
-
-const challenge=new Uint8Array(32)
-crypto.getRandomValues(challenge)
-
-await navigator.credentials.get({
-publicKey:{challenge,timeout:60000,userVerification:"preferred"}
-})
-
+await navigator.credentials.get({publicKey:{challenge:new Uint8Array(32)}})
 if(purchaseType==="data") buyData("biometric")
 if(purchaseType==="airtime") buyAirtime("biometric")
-
 closePinModal()
-
 }catch{
 alert("Biometric failed")
 }
-
 }
 
-/* ================= CHAT ================= */
 function openChat(){
 window.open("https://wa.me/2348117988561","_blank")
 }
-
 </script>
 
 </body>
