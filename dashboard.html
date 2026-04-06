@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
-
 body{
 margin:0;
 background:#000;
@@ -45,15 +44,9 @@ background:linear-gradient(135deg,#3b78e7,#274ea3);
 font-size:30px;
 }
 
-/* SECTIONS */
-.section{
-display:none;
-padding:20px;
-}
-
-.section.active{
-display:block;
-}
+/* SECTION */
+.section{display:none;padding:20px;}
+.section.active{display:block;}
 
 /* FORM */
 input,select{
@@ -64,6 +57,7 @@ border-radius:8px;
 border:none;
 }
 
+/* BUTTON */
 button{
 background:#3b78e7;
 border:none;
@@ -75,10 +69,18 @@ width:100%;
 cursor:pointer;
 }
 
-/* TRANSACTIONS */
+/* TX */
 .transactionCard{
 background:#08142c;
 padding:12px;
+border-radius:10px;
+margin-top:10px;
+}
+
+/* ADMIN */
+.adminCard{
+background:#08142c;
+padding:15px;
 border-radius:10px;
 margin-top:10px;
 }
@@ -94,99 +96,32 @@ justify-content:space-around;
 padding:10px 0;
 }
 
-.bottomNav button{
-background:none;
-border:none;
-color:white;
-font-size:14px;
-}
+/* LOGO SMALL */
+.logoSmall{width:40px;margin-top:10px;}
 
-/* PIN MODAL */
-.pinModal{
+/* MODALS */
+.pinModal,#receiptModal{
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
+top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.9);
 display:none;
 align-items:center;
 justify-content:center;
-z-index:5000;
+z-index:9999;
 }
 
-.pinBox{
+.pinBox,.receiptBox{
 background:#0c1a36;
 padding:20px;
 border-radius:10px;
 width:85%;
 max-width:400px;
-}
-
-/* RECEIPT MODAL */
-#receiptModal{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.9);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:6000;
-}
-
-.receiptBox{
-background:#0c1a36;
-padding:20px;
-border-radius:10px;
-width:85%;
-max-width:400px;
-}
-
-/* ADMIN */
-.adminCard{
-background:#08142c;
-padding:15px;
-border-radius:10px;
-margin-top:10px;
-}
-
-/* NETWORK LOGO */
-.logoSmall{
-width:40px;
-margin-top:10px;
-}
-
-/* CHAT */
-.chatBtn{
-position:fixed;
-right:15px;
-bottom:90px;
-background:#25D366;
-padding:14px 18px;
-border-radius:30px;
-color:white;
-font-weight:bold;
-cursor:pointer;
-}
-
-/* FOOTER */
-footer{
-text-align:center;
-margin-top:40px;
-font-size:13px;
-opacity:0.8;
 }
 
 /* LOADER */
 #loader{
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
+top:0;left:0;width:100%;height:100%;
 background:#000;
 display:none;
 align-items:center;
@@ -195,8 +130,7 @@ z-index:9999;
 }
 
 .spinner{
-width:50px;
-height:50px;
+width:50px;height:50px;
 border:5px solid #222;
 border-top:5px solid #3b78e7;
 border-radius:50%;
@@ -204,7 +138,7 @@ animation:spin 1s linear infinite;
 }
 
 @keyframes spin{
-0%{transform:rotate(0deg);}
+0%{transform:rotate(0);}
 100%{transform:rotate(360deg);}
 }
 
@@ -213,23 +147,16 @@ animation:spin 1s linear infinite;
 
 <body>
 
-<!-- LOADER -->
-<div id="loader">
-<div class="spinner"></div>
-</div>
+<div id="loader"><div class="spinner"></div></div>
 
 <header>
-<div class="logo">
-<img src="images/logo.png">
-</div>
-<div onclick="showSection('profile')" style="cursor:pointer">👤</div>
+<div class="logo"><img src="images/logo.png"></div>
+<div onclick="showSection('profile')">👤</div>
 </header>
 
 <!-- HOME -->
 <section id="home" class="section active">
-<div style="text-align:center">
-<h3 id="usernameDisplay">Hello</h3>
-</div>
+<h3 id="usernameDisplay"></h3>
 
 <div class="walletCard">
 <p>Wallet Balance</p>
@@ -244,17 +171,10 @@ animation:spin 1s linear infinite;
 <section id="data" class="section">
 <h2>Buy Data</h2>
 
-<select id="networkSelect">
-<option value="">Select Network</option>
-<option value="MTN">MTN</option>
-<option value="Airtel">Airtel</option>
-<option value="Glo">Glo</option>
-</select>
-
+<select id="networkSelect"></select>
 <img id="networkLogo" class="logoSmall">
 
 <input id="dataPhone" placeholder="Phone Number">
-
 <select id="planSelect"></select>
 
 <button onclick="openPinModal('data')">Buy Data</button>
@@ -270,9 +190,7 @@ animation:spin 1s linear infinite;
 <option>Glo</option>
 </select>
 
-<img id="airtimeLogo" class="logoSmall">
-
-<input id="airtimePhone" placeholder="Phone Number">
+<input id="airtimePhone" placeholder="Phone">
 <input id="airtimeAmount" placeholder="Amount">
 
 <button onclick="openPinModal('airtime')">Buy Airtime</button>
@@ -280,60 +198,56 @@ animation:spin 1s linear infinite;
 
 <!-- TRANSACTIONS -->
 <section id="transactions" class="section">
-<h2>All Transactions</h2>
+<h2>Transactions</h2>
 <div id="allTransactions"></div>
 </section>
 
 <!-- PROFILE -->
 <section id="profile" class="section">
 <h2>Account</h2>
-<button onclick="toggleBiometric()">Enable / Disable Biometric</button>
+
+<button onclick="changePassword()">Change Password</button>
+<button onclick="changePin()">Change PIN</button>
+<button onclick="toggleBiometric()">Toggle Biometric</button>
 <button onclick="logout()">Logout</button>
+
 </section>
 
 <!-- ADMIN -->
-<section id="admin" class="section" style="display:none">
+<section id="admin" class="section">
 <h2>Admin Panel</h2>
 
 <div class="adminCard">
 <h3>Total Profit</h3>
 <p id="adminTotalProfit">₦0</p>
 </div>
+
+<button onclick="showSection('home')">Back</button>
 </section>
 
-<!-- PIN MODAL -->
+<!-- PIN -->
 <div id="pinModal" class="pinModal">
 <div class="pinBox">
-<h3>Confirm Purchase</h3>
-<input id="pinInput" type="password" placeholder="Enter PIN">
-<button onclick="confirmPurchase()">Confirm With PIN</button>
-<button onclick="confirmBiometric()">Confirm With Biometrics</button>
+<input id="pinInput" placeholder="PIN">
+<button onclick="confirmPurchase()">Confirm</button>
 <button onclick="closePinModal()">Cancel</button>
 </div>
 </div>
 
-<!-- RECEIPT MODAL -->
+<!-- RECEIPT -->
 <div id="receiptModal">
 <div class="receiptBox">
-<h3>Transaction Receipt</h3>
 <div id="receiptContent"></div>
 <button onclick="closeReceipt()">Close</button>
 </div>
 </div>
-
-<!-- CHAT -->
-<div class="chatBtn" onclick="openChat()">Chat Support</div>
-
-<footer>
-© MAYCONNECT TECHNOLOGIES NIG LTD  
-<br>Developed by MayConnect
-</footer>
 
 <div class="bottomNav">
 <button onclick="showSection('home')">Home</button>
 <button onclick="showSection('data')">Data</button>
 <button onclick="showSection('airtime')">Airtime</button>
 <button onclick="showSection('transactions')">History</button>
+<button onclick="showSection('admin')">Admin</button>
 </div>
 
 <script src="app.js"></script>
@@ -348,35 +262,27 @@ document.getElementById(id).classList.add("active")
 
 function openPinModal(type){
 purchaseType=type
-document.getElementById("pinModal").style.display="flex"
+pinModal.style.display="flex"
 }
 
 function closePinModal(){
-document.getElementById("pinModal").style.display="none"
-document.getElementById("pinInput").value=""
+pinModal.style.display="none"
+pinInput.value=""
 }
 
 function confirmPurchase(){
-const pin=document.getElementById("pinInput").value
-if(!pin){ alert("Enter PIN"); return }
+const pin=pinInput.value
+if(!pin) return alert("Enter PIN")
+
 if(purchaseType==="data") buyData(pin)
 if(purchaseType==="airtime") buyAirtime(pin)
+
 closePinModal()
 }
 
+/* 🔥 FIXED BIOMETRIC */
 async function confirmBiometric(){
-try{
-await navigator.credentials.get({publicKey:{challenge:new Uint8Array(32)}})
-if(purchaseType==="data") buyData("biometric")
-if(purchaseType==="airtime") buyAirtime("biometric")
-closePinModal()
-}catch{
-alert("Biometric failed")
-}
-}
-
-function openChat(){
-window.open("https://wa.me/2348117988561","_blank")
+alert("Use PIN instead (biometric requires backend setup)")
 }
 </script>
 
