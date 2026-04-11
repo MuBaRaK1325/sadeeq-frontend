@@ -9,15 +9,14 @@
 
 /* THEMES */
 :root{
---primary:#6c5ce7;
+--primary:#066b34;
 --bg:#050510;
 --card:#0b0b2a;
---accent:#341f97;
+--accent:#1f974d;
 }
 
-body.teeversh{--primary:#6c5ce7;--bg:#050510;--card:#0b0b2a;}
-body.bnhabeeb{--primary:gold;--bg:#1a1403;--card:#2c2105;}
-body.sadeeq{--primary:#00c853;--bg:#02140a;--card:#063d1d;}
+
+body.sadeeq{--primary:#033015;--bg:#02140a;--card:#063d1d;}
 
 body{
 margin:0;
@@ -147,12 +146,10 @@ cursor:pointer;
 /* THEME FIX */
 const payload=JSON.parse(atob(localStorage.getItem("token").split(".")[1]))
 
-document.body.classList.remove("teeversh","bnhabeeb","sadeeq")
+document.body.classList.remove("sadeeq")
 document.body.classList.add(payload.company)
 
 companyName.innerText={
-teeversh:"TEEVERSH",
-bnhabeeb:"BN HABEEB",
 sadeeq:"SADEEQ"
 }[payload.company]
 
