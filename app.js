@@ -1,36 +1,36 @@
 const API="https://mayconnect-backend-1.onrender.com"
 
 let cachedPlans=[]
-let filteredPlans=[]
-let selectedNetwork=null
-let selectedPlan=null
 let currentUser=null
 let ws=null
-let purchaseType=""
 
-/* HELPERS */
-function getToken(){return localStorage.getItem("token")}
-function el(id){return document.getElementById(id)}
+let selectedNetwork=null
+let selectedPlan=null
 
-function showToast(msg){
-const t=document.createElement("div")
-t.innerText=msg
-Object.assign(t.style,{
-position:"fixed",
-bottom:"30px",
-left:"50%",
-transform:"translateX(-50%)",
-background:"#000",
-padding:"12px 20px",
-borderRadius:"8px",
-color:"#fff",
-zIndex:"9999"
-})
-document.body.appendChild(t)
-setTimeout(()=>t.remove(),3000)
+/* ================= HELPERS ================= */
+
+function getToken(){ return localStorage.getItem("token") }
+function el(id){ return document.getElementById(id) }
+
+/* ================= MESSAGE ================= */
+
+function showMsg(msg){
+if(!el("msgBox")) return alert(msg)
+
+el("msgBox").innerHTML=`
+<div style="text-align:center;color:white">
+<p>${msg}</p>
+<button onclick="closeModal('msgModal')" 
+style="background:#6c5ce7;padding:12px;border:none;border-radius:10px;color:#fff;width:100%">
+OK
+</button>
+</div>
+`
+openModal("msgModal")
 }
 
-/* AUTH */
+/* ================= AUTH ================= */
+
 function checkAuth(){
 if(!getToken()){
 window.location.href="login.html"
@@ -39,193 +39,365 @@ return false
 return true
 }
 
-/* DASHBOARD */
-function loadDashboard(){
+/* ================= LOAD ================= */
+
+async function loadDashboard(){
 
 if(!checkAuth()) return
 
 try{
 currentUser = JSON.parse(atob(getToken().split(".")[1]))
 }catch{
-logout(); return
+logout()
+return
 }
-
-/* 🔥 FIX COMPANY THEME */
-document.body.classList.remove("teeversh","bnhabeeb","sadeeq")
-document.body.classList.add(currentUser.company)
 
 document.body.style.display="block"
 
+if(el("usernameDisplay")){
 el("usernameDisplay").innerText="Hello "+currentUser.username
-
-/* ADMIN SHOW */
-if(currentUser.is_admin && el("adminSection")){
-el("adminSection").style.display="block"
 }
 
+initNavigation()
+
+await loadAccount()
+await loadPlans()
 fetchTransactions()
-loadPlans()
-loadAccount()
 
 setTimeout(connectWebSocket,1000)
 }
 
-/* WALLET */
-function animateWallet(balance){
-el("walletBalance").innerText="₦"+Number(balance||0).toLocaleString()
+/* ================= NAVIGATION ================= */
+
+function initNavigation(){
+
+document.querySelectorAll(".section").forEach(s=>{
+s.style.display="none"
+})
+
+if(el("home")) el("home").style.display="block"
 }
 
-/* TRANSACTIONS */
+function showSection(id){
+
+document.querySelectorAll(".section").forEach(s=>{
+s.style.display="none"
+})
+
+if(el(id)){
+el(id).style.display="block"
+}
+}
+
+/* ================= WALLET ================= */
+
+function updateWallet(balance){
+if(el("walletBalance")){
+el("walletBalance").innerText="₦"+Number(balance).toLocaleString()
+}
+}
+
+/* ================= TRANSACTIONS ================= */
+
 async function fetchTransactions(){
 try{
-const res=await fetch(API+"/api/transactions",{headers:{Authorization:"Bearer "+getToken()}})
+const res=await fetch(API+"/api/transactions",{
+headers:{Authorization:"Bearer "+getToken()}
+})
+
 const tx=await res.json()
 
-if(tx.length) animateWallet(tx[0].wallet_balance)
+if(tx.length) updateWallet(tx[0].wallet_balance)
 
-const home=el("transactionHistory")
-home.innerHTML=""
+if(el("transactionHistory")){
+el("transactionHistory").innerHTML=""
+tx.slice(0,5).forEach(t=>el("transactionHistory").appendChild(txCard(t)))
+}
 
-tx.slice(0,5).forEach(t=>{
+if(el("allTransactions")){
+el("allTransactions").innerHTML=""
+tx.forEach(t=>el("allTransactions").appendChild(txCard(t)))
+}
+
+}catch(e){
+console.log("TX ERROR",e)
+}
+}
+
+function txCard(t){
 const div=document.createElement("div")
 div.className="transactionCard"
-div.innerHTML=`${t.type} - ₦${t.amount}`
-home.appendChild(div)
-})
-}catch{}
+div.innerHTML=`
+<strong>${t.type}</strong> ₦${t.amount}<br>
+${t.phone||""}<br>
+<span>${t.status}</span>
+`
+return div
 }
 
-/* PLANS */
+/* ================= PLANS ================= */
+
 async function loadPlans(){
-const res=await fetch(API+"/api/plans",{headers:{Authorization:"Bearer "+getToken()}})
-cachedPlans=await res.json()
-
-/* 🔥 COMPANY FILTER */
-cachedPlans=cachedPlans.filter(p=>p.company===currentUser.company)
-
-renderNetworks()
-}
-
-/* NETWORK LOGOS */
-function renderNetworks(){
-const box=el("networkList")
-box.innerHTML=""
-
-const networks=["MTN","AIRTEL","GLO"]
-
-networks.forEach(n=>{
-const img=document.createElement("img")
-img.src="images/"+n.toLowerCase()+".png"
-img.style.width="60px"
-img.onclick=()=>selectNetwork(n)
-box.appendChild(img)
+try{
+const res=await fetch(API+"/api/plans",{
+headers:{Authorization:"Bearer "+getToken()}
 })
+cachedPlans = await res.json()
+}catch(e){
+console.log("PLANS ERROR",e)
+}
 }
 
-function selectNetwork(net){
-selectedNetwork=net
-filteredPlans=cachedPlans.filter(p=>p.network===net)
+/* ================= NETWORK ================= */
+
+function selectNetwork(network, element){
+
+selectedNetwork = (network || "").toLowerCase()
+selectedPlan = null
+
+document.querySelectorAll(".networkItem").forEach(n=>{
+n.classList.remove("active")
+})
+
+if(element){
+element.classList.add("active")
+}
+
 renderPlans()
 }
 
-/* RENDER PLANS */
+/* ================= RENDER PLANS ================= */
+
 function renderPlans(){
+
 const list=el("planList")
+if(!list) return
+
 list.innerHTML=""
 
-filteredPlans.forEach(p=>{
+/* ✅ FIXED MATCHING */
+const filtered = cachedPlans.filter(p=>
+(p.network || "").toLowerCase().includes(selectedNetwork)
+)
+
+if(!filtered.length){
+list.innerHTML="<p style='color:white'>No plans available</p>"
+return
+}
+
+filtered.forEach(p=>{
+
+/* ✅ FIX VALIDITY */
+let validity = p.validity || p.duration || p.plan_validity || "N/A"
+
 const div=document.createElement("div")
 div.className="planItem"
-div.innerHTML=`${p.name}<br>₦${p.price}`
+
+div.innerHTML=`
+<strong>${p.name}</strong><br>
+${validity}<br>
+<strong>₦${p.price}</strong>
+`
+
 div.onclick=()=>{
-selectedPlan=p.id
-document.querySelectorAll(".planItem").forEach(i=>i.classList.remove("active"))
-div.classList.add("active")
+selectedPlan = p
+openConfirmModal(p)
 }
+
 list.appendChild(div)
+
 })
 }
 
-/* BUY DATA */
-async function buyData(pin){
+/* ================= CONFIRM ================= */
 
-const phone=el("dataPhone").value
+function openConfirmModal(plan){
 
-if(!phone || !selectedPlan){
-return showToast("Fill all fields")
+let validity = plan.validity || plan.duration || plan.plan_validity || "N/A"
+
+el("msgBox").innerHTML=`
+<div style="text-align:center;color:white">
+<h3 style="color:#6c5ce7">Confirm Purchase</h3>
+<p>${plan.name}</p>
+<p>${validity}</p>
+<p>₦${plan.price}</p>
+
+<button onclick="openPinModal()" 
+style="background:#6c5ce7;margin-top:10px;padding:12px;border:none;border-radius:10px;color:#fff;width:100%">
+Enter PIN
+</button>
+
+<button onclick="confirmBiometric()" 
+style="margin-top:10px;padding:12px;width:100%">
+Use Fingerprint
+</button>
+</div>
+`
+
+openModal("msgModal")
 }
 
+/* ================= PIN ================= */
+
+function openPinModal(){
+closeModal("msgModal")
+
+if(el("pinModal")){
+el("pinModal").style.display="flex"
+}else{
+showMsg("PIN modal missing in HTML")
+}
+}
+
+function confirmPurchase(){
+
+const pin=el("pinInput")?.value
+
+if(!pin) return showMsg("Enter PIN")
+
+closeModal("pinModal")
+buyData(pin)
+}
+
+/* ================= BUY DATA ================= */
+
+async function buyData(pin){
+
+const phone=el("dataPhone")?.value
+
+if(!phone || !selectedPlan){
+showMsg("Select plan & enter phone")
+return
+}
+
+try{
 const res=await fetch(API+"/api/buy-data",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
 Authorization:"Bearer "+getToken()
 },
-body:JSON.stringify({phone,plan_id:selectedPlan,pin})
+body:JSON.stringify({
+phone,
+plan_id:selectedPlan.id,
+pin
+})
 })
 
 const data=await res.json()
 
 if(res.ok){
-showToast("Success ✅")
+showMsg("Purchase Successful ✅")
 fetchTransactions()
 }else{
-showToast(data.message)
+showMsg(data.message)
+}
+}catch{
+showMsg("Network error")
 }
 }
 
-/* 🔥 SIMPLE BIOMETRIC (NO PASSKEY) */
-async function confirmBiometric(){
+/* ================= BIOMETRIC ================= */
+
+function confirmBiometric(){
 
 if(localStorage.getItem("biometric")!=="true"){
-return showToast("Enable biometric first")
+showMsg("Enable biometric first")
+return
 }
 
-/* simulate success (device unlock only) */
-if(purchaseType==="data") buyData("0000")
+el("msgBox").innerHTML=`
+<div style="text-align:center;color:white">
+<h3>🔒 Biometric</h3>
+<p>Touch fingerprint sensor</p>
+<button onclick="finishBiometric()" 
+style="background:#6c5ce7;padding:12px;border:none;border-radius:10px;color:#fff;width:100%">
+Continue
+</button>
+</div>
+`
+
+openModal("msgModal")
 }
 
-/* TOGGLE */
-function toggleBiometric(){
-let state=localStorage.getItem("biometric")
-localStorage.setItem("biometric", state==="true"?"false":"true")
-showToast("Biometric "+(state==="true"?"Disabled":"Enabled"))
+function finishBiometric(){
+closeModal("msgModal")
+buyData("biometric")
 }
 
-/* ACCOUNT */
-async function loadAccount(){
+/* ================= TOGGLE ================= */
+
+async function toggleBiometric(){
+
+let state = localStorage.getItem("biometric")
+
+if(state==="true"){
+localStorage.setItem("biometric","false")
+showMsg("Biometric Disabled ❌")
+}else{
+localStorage.setItem("biometric","true")
+
 try{
-const res=await fetch(API+"/api/me",{headers:{Authorization:"Bearer "+getToken()}})
+await fetch(API+"/api/biometric/enable",{
+method:"POST",
+headers:{Authorization:"Bearer "+getToken()}
+})
+}catch{}
+
+showMsg("Biometric Enabled ✅")
+}
+}
+
+/* ================= ACCOUNT ================= */
+
+async function loadAccount(){
+
+try{
+const res=await fetch(API+"/api/me",{
+headers:{Authorization:"Bearer "+getToken()}
+})
+
 const user=await res.json()
 
-el("bankName").innerText=user.bank_name||"N/A"
-el("accountNumber").innerText=user.account_number||"N/A"
+if(el("bankName")) el("bankName").innerText=user.bank_name||"N/A"
+if(el("accountNumber")) el("accountNumber").innerText=user.account_number||"N/A"
+
 }catch{}
 }
 
-/* NAVIGATION */
-function showSection(id){
-document.querySelectorAll("section").forEach(s=>s.style.display="none")
-el(id).style.display="block"
+/* ================= MODALS ================= */
+
+function openModal(id){
+if(el(id)) el(id).style.display="flex"
 }
 
-/* LOGOUT */
-function logout(){
-localStorage.clear()
-window.location.href="login.html"
+function closeModal(id){
+if(el(id)) el(id).style.display="none"
 }
 
-/* WS */
+/* ================= WS ================= */
+
 function connectWebSocket(){
+
 const wsURL=API.replace("https","wss")
 ws=new WebSocket(wsURL+"?token="+getToken())
 
 ws.onmessage=(msg)=>{
 const data=JSON.parse(msg.data)
 if(data.type==="wallet_update"){
-animateWallet(data.balance)
+updateWallet(data.balance)
 }
 }
 }
+
+/* ================= LOGOUT ================= */
+
+function logout(){
+try{ if(ws) ws.close() }catch{}
+localStorage.clear()
+window.location.href="login.html"
+}
+
+/* ================= START ================= */
 
 document.addEventListener("DOMContentLoaded",loadDashboard)
