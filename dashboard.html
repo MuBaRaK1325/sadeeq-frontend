@@ -3,27 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard</title>
+<title>SADEEQ Dashboard</title>
 
 <style>
-
-/* THEMES */
 :root{
---primary:#066b34;
---bg:#050510;
---card:#0b0b2a;
---accent:#1f974d;
+--primary:#5ce75c;
+--bg:#05100a;
+--card:#0b2a15;
+--accent:#1f9769;
 }
-
-
-body.sadeeq{--primary:#033015;--bg:#02140a;--card:#063d1d;}
 
 body{
 margin:0;
 background:var(--bg);
 color:white;
 font-family:Arial;
-display:none;
 padding-bottom:120px;
 }
 
@@ -31,17 +25,54 @@ padding-bottom:120px;
 header{
 display:flex;
 justify-content:space-between;
+align-items:center;
 padding:15px;
 background:var(--card);
+}
+
+.logo img{
+width:65px;
+height:65px;
+border-radius:50%;
+border:3px solid var(--primary);
+box-shadow:0 0 10px var(--primary);
 }
 
 /* WALLET */
 .walletCard{
 margin:20px;
-padding:25px;
-border-radius:20px;
+padding:20px;
+border-radius:16px;
 text-align:center;
 background:linear-gradient(135deg,var(--primary),var(--accent));
+}
+
+/* QUICK */
+.quickActions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin:20px;
+}
+
+.quickCard{
+background:var(--card);
+padding:15px;
+border-radius:12px;
+text-align:center;
+cursor:pointer;
+}
+
+/* SECTION */
+.section{display:none;padding:20px;}
+.section.active{display:block;}
+
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:8px;
+border:none;
 }
 
 /* BUTTON */
@@ -53,37 +84,116 @@ border-radius:10px;
 color:white;
 margin-top:10px;
 width:100%;
+cursor:pointer;
 }
 
-/* GRID */
-.planGrid{
+/* NETWORK */
+.networkGrid{
 display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-margin-top:10px;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin-top:15px;
+}
+
+.networkItem{
+background:var(--card);
+padding:12px;
+border-radius:50%;
+text-align:center;
+cursor:pointer;
+border:2px solid transparent;
+transition:0.3s;
+}
+
+.networkItem img{
+width:45px;
+height:45px;
+border-radius:50%;
+}
+
+.networkItem.active{
+border:3px solid var(--primary);
 }
 
 /* PLAN */
 .planItem{
 background:var(--card);
-padding:10px;
+padding:12px;
 border-radius:10px;
+margin-top:10px;
 cursor:pointer;
 }
-.planItem.active{border:2px solid var(--primary)}
 
+/* TRANSACTION */
+.transactionCard{
+background:var(--card);
+padding:12px;
+border-radius:10px;
+margin-top:10px;
+}
+
+/* NAV */
+.bottomNav{
+position:fixed;
+bottom:0;
+width:100%;
+background:var(--card);
+display:flex;
+justify-content:space-around;
+}
+
+.bottomNav button{
+background:none;
+color:white;
+}
+
+/* MODAL */
+.modal{
+position:fixed;
+top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.85);
+display:none;
+align-items:center;
+justify-content:center;
+}
+
+.modalBox{
+background:var(--card);
+padding:20px;
+border-radius:12px;
+width:85%;
+text-align:center;
+}
+
+/* FOOTER */
+.footer{
+text-align:center;
+font-size:14px;
+margin-top:30px;
+opacity:0.9;
+}
+
+.footer a{
+color:#5ce77a;
+text-decoration:none;
+display:block;
+margin-top:8px;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-<h3 id="companyName"></h3>
+<div class="logo">
+<img src="images/SADEEQ.PNG">
+</div>
+<h3>TEEVERSH DATA PLUG</h3>
 <div onclick="showSection('profile')">👤</div>
 </header>
 
 <!-- HOME -->
-<section id="home">
+<section id="home" class="section active">
 <h3 id="usernameDisplay"></h3>
 
 <div class="walletCard">
@@ -91,90 +201,134 @@ cursor:pointer;
 <strong id="walletBalance">₦0</strong>
 </div>
 
-<button onclick="showSection('fund')">💰 Fund</button>
-<button onclick="showSection('data')">📶 Buy Data</button>
+<div class="quickActions">
+<div class="quickCard" onclick="showSection('data')">📶 Buy Data</div>
+<div class="quickCard" onclick="showSection('fund')">💰 Fund Wallet</div>
+</div>
 
 <div id="transactionHistory"></div>
 </section>
 
 <!-- FUND -->
-<section id="fund" style="display:none">
-<button onclick="showSection('home')">⬅ Close</button>
+<section id="fund" class="section">
+<h3>Fund Wallet</h3>
 
-<p>Bank</p>
-<strong id="bankName"></strong>
+<div class="walletCard">
+<p id="bankName">Bank</p>
+<strong id="accountNumber">0000000000</strong>
+<button onclick="copyAccount()">Copy Account Number</button>
+</div>
 
-<p>Account</p>
-<strong id="accountNumber"></strong>
-
-<button onclick="copyAccount()">Copy</button>
+<button onclick="showSection('home')">⬅ Back</button>
 </section>
 
 <!-- DATA -->
-<section id="data" style="display:none">
-<button onclick="showSection('home')">⬅ Close</button>
+<section id="data" class="section">
 
-<input id="dataPhone" placeholder="Phone">
+<button onclick="showSection('home')">⬅ Back</button>
 
-<div id="networkList"></div>
-<div id="planList" class="planGrid"></div>
+<h3>Select Network</h3>
 
-<button onclick="openPinModal('data')">Buy Data</button>
-<button onclick="confirmBiometric()">Use Fingerprint</button>
+<div class="networkGrid">
+
+<div class="networkItem" onclick="selectNetwork('mtn', this)">
+<img src="images/mtn.png"><p>MTN</p>
+</div>
+
+<div class="networkItem" onclick="selectNetwork('glo', this)">
+<img src="images/glo.png"><p>GLO</p>
+</div>
+
+<div class="networkItem" onclick="selectNetwork('airtel', this)">
+<img src="images/airtel.png"><p>AIRTEL</p>
+</div>
+
+</div>
+
+<input id="dataPhone" placeholder="Phone Number">
+
+<div id="planList"></div>
+
+</section>
+
+<!-- HISTORY -->
+<section id="transactions" class="section">
+<button onclick="showSection('home')">⬅ Back</button>
+<div id="allTransactions"></div>
 </section>
 
 <!-- PROFILE -->
-<section id="profile" style="display:none">
-<button onclick="showSection('home')">⬅ Close</button>
+<section id="profile" class="section">
 
+<button onclick="showSection('home')">⬅ Back</button>
+
+<button onclick="openModal('passwordModal')">Change Password</button>
+<button onclick="openModal('pinModalBox')">Change PIN</button>
 <button onclick="toggleBiometric()">Toggle Biometric</button>
 <button onclick="logout()">Logout</button>
+
+<div class="footer">
+<p>Need Help?</p>
+
+<a href="https://wa.me/2347047457735" target="_blank">
+📞 Contact Support (0704 745 7735)
+</a>
+
+<a href="https://wa.me/2348117988561" target="_blank">
+👨‍💻 Contact Developer (0811 798 8561)
+</a>
+
+<p style="margin-top:10px;">© TEEVERSH GLOBAL RESOURCES
+    DEVELOPED BY MAYCONNECT TECHNOLOGIES NIG LID
+</p>
+</div>
+
 </section>
 
 <!-- PIN MODAL -->
 <div id="pinModal" class="modal">
-<div>
-<input id="pinInput">
-<button onclick="startProcessing()">Confirm</button>
+<div class="modalBox">
+<h3>Enter PIN</h3>
+<input id="pinInput" placeholder="Enter PIN">
+<button onclick="confirmPurchase()">Confirm</button>
+<button onclick="closeModal('pinModal')">Cancel</button>
 </div>
+</div>
+
+<!-- PASSWORD -->
+<div id="passwordModal" class="modal">
+<div class="modalBox">
+<input id="oldPassword" placeholder="Old Password">
+<input id="newPassword" placeholder="New Password">
+<button onclick="submitPassword()">Update</button>
+<button onclick="closeModal('passwordModal')">Cancel</button>
+</div>
+</div>
+
+<!-- PIN CHANGE -->
+<div id="pinModalBox" class="modal">
+<div class="modalBox">
+<input id="oldPin" placeholder="Old PIN">
+<input id="newPin" placeholder="New PIN">
+<button onclick="submitPin()">Update</button>
+<button onclick="closeModal('pinModalBox')">Cancel</button>
+</div>
+</div>
+
+<!-- MESSAGE -->
+<div id="msgModal" class="modal">
+<div class="modalBox" id="msgBox"></div>
+</div>
+
+<!-- NAV -->
+<div class="bottomNav">
+<button onclick="showSection('home')">Home</button>
+<button onclick="showSection('data')">Data</button>
+<button onclick="showSection('transactions')">History</button>
+<button onclick="showSection('profile')">Profile</button>
 </div>
 
 <script src="app.js"></script>
-
-<script>
-
-/* THEME FIX */
-const payload=JSON.parse(atob(localStorage.getItem("token").split(".")[1]))
-
-document.body.classList.remove("sadeeq")
-document.body.classList.add(payload.company)
-
-companyName.innerText={
-sadeeq:"SADEEQ"
-}[payload.company]
-
-/* NAV */
-function showSection(id){
-document.querySelectorAll("section").forEach(s=>s.style.display="none")
-document.getElementById(id).style.display="block"
-}
-
-/* PIN FLOW */
-function openPinModal(type){
-purchaseType=type
-document.getElementById("pinModal").style.display="block"
-}
-
-function startProcessing(){
-const pin=document.getElementById("pinInput").value
-if(!pin) return alert("Enter PIN")
-
-document.getElementById("pinModal").style.display="none"
-
-if(purchaseType==="data") buyData(pin)
-}
-
-</script>
 
 </body>
 </html>
