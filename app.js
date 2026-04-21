@@ -703,10 +703,37 @@ async function reverseTransaction() {
 async function loadAccount() {
   const res = await fetch(API + "/api/me", { headers: { Authorization: "Bearer " + getToken() } });
   const user = await res.json();
+
   if (el("bankName")) el("bankName").innerText = user.bank_name || "N/A";
   if (el("accountNumber")) el("accountNumber").innerText = user.account_number || "N/A";
   if (el("accountName")) el("accountName").innerText = user.account_name || "N/A";
+
+  // Show generate button if no account
+  if (!user.account_number && el("generateAccountBtn")) {
+    el("generateAccountBtn").style.display = "block";
+  }
+
   updateWallet(user.wallet_balance);
+}
+
+async function generateAccount() {
+  showLoader("Creating your dedicated account...");
+  try {
+    const res = await fetch(API + "/api/generate-account", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + getToken() }
+    });
+    const data = await res.json();
+    hideLoader();
+    showMsg(data.message, res.ok? "success" : "error");
+    if (res.ok) {
+      if (el("generateAccountBtn")) el("generateAccountBtn").style.display = "none";
+      await loadAccount(); // refresh
+    }
+  } catch {
+    hideLoader();
+    showMsg("Server error", "error");
+  }
 }
 
 /* ================= PASSWORD & PIN ================= */
