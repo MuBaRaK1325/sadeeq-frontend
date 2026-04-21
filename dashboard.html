@@ -3,14 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SADEEQ Dashboard</title>
+<title>Sadeeq VTU</title>
 
 <style>
 :root{
---primary:#5ce75c;
---bg:#05100a;
---card:#0b2a15;
---accent:#1f9769;
+--primary:#16a34a;
+--bg:#041208;
+--card:#0d1f14;
+--accent:#22c55e;
+--success:#00c853;
+--danger:#ff4d4d;
+--warning:#ffa000;
 }
 
 body{
@@ -30,12 +33,26 @@ padding:15px;
 background:var(--card);
 }
 
-.logo img{
-width:65px;
-height:65px;
+.logoContainer{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.logoContainer img{
+height:40px;
+width:40px;
 border-radius:50%;
-border:3px solid var(--primary);
-box-shadow:0 0 10px var(--primary);
+border:2px solid var(--primary);
+object-fit:cover;
+}
+
+.companyBadge{
+background:var(--primary);
+padding:4px 8px;
+border-radius:6px;
+font-size:12px;
+font-weight:bold;
 }
 
 /* WALLET */
@@ -45,6 +62,15 @@ padding:20px;
 border-radius:16px;
 text-align:center;
 background:linear-gradient(135deg,var(--primary),var(--accent));
+}
+
+.adminWalletCard{
+margin:20px;
+padding:15px;
+border-radius:12px;
+text-align:center;
+background:linear-gradient(135deg,#0a1f15,#14532d);
+border:1px solid var(--primary);
 }
 
 /* QUICK */
@@ -61,18 +87,30 @@ padding:15px;
 border-radius:12px;
 text-align:center;
 cursor:pointer;
+transition:0.2s;
 }
+.quickCard:hover{transform:scale(1.03);}
 
 /* SECTION */
 .section{display:none;padding:20px;}
 .section.active{display:block;}
 
-input{
+input,select{
 width:100%;
 padding:12px;
 margin-top:10px;
 border-radius:8px;
 border:none;
+background:#13291a;
+color:white;
+box-sizing:border-box;
+}
+
+label{
+display:block;
+margin-top:12px;
+font-size:14px;
+opacity:0.8;
 }
 
 /* BUTTON */
@@ -85,7 +123,13 @@ color:white;
 margin-top:10px;
 width:100%;
 cursor:pointer;
+font-weight:bold;
 }
+.primaryBtn{background:var(--primary);}
+.dangerBtn{background:var(--danger);}
+.successBtn{background:var(--success);}
+.warningBtn{background:var(--warning);}
+button:disabled{opacity:0.5;cursor:not-allowed;}
 
 /* NETWORK */
 .networkGrid{
@@ -101,18 +145,24 @@ padding:12px;
 border-radius:50%;
 text-align:center;
 cursor:pointer;
-border:2px solid transparent;
-transition:0.3s;
+border:3px solid transparent;
+aspect-ratio:1;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:0.2s;
+}
+
+.networkItem.active{
+border:3px solid var(--primary);
+transform:scale(1.05);
 }
 
 .networkItem img{
 width:45px;
 height:45px;
 border-radius:50%;
-}
-
-.networkItem.active{
-border:3px solid var(--primary);
+object-fit:cover;
 }
 
 /* PLAN */
@@ -122,6 +172,19 @@ padding:12px;
 border-radius:10px;
 margin-top:10px;
 cursor:pointer;
+position:relative;
+transition:0.2s;
+}
+.planItem:hover{background:#163020;}
+
+.topUserBadge{
+position:absolute;
+top:8px;
+right:8px;
+background:var(--success);
+padding:2px 6px;
+border-radius:4px;
+font-size:10px;
 }
 
 /* TRANSACTION */
@@ -132,6 +195,29 @@ border-radius:10px;
 margin-top:10px;
 }
 
+.userCard, .withdrawCard, .planCard{
+background:var(--card);
+padding:12px;
+border-radius:10px;
+margin-top:10px;
+}
+
+/* TABLE */
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:15px;
+background:var(--card);
+border-radius:8px;
+overflow:hidden;
+}
+th,td{
+padding:10px;
+text-align:left;
+border-bottom:1px solid #13291a;
+}
+th{background:#163020;}
+
 /* NAV */
 .bottomNav{
 position:fixed;
@@ -140,11 +226,15 @@ width:100%;
 background:var(--card);
 display:flex;
 justify-content:space-around;
+padding:8px 0;
+border-top:1px solid #13291a;
 }
 
 .bottomNav button{
 background:none;
 color:white;
+padding:8px;
+font-size:12px;
 }
 
 /* MODAL */
@@ -155,6 +245,7 @@ background:rgba(0,0,0,0.85);
 display:none;
 align-items:center;
 justify-content:center;
+z-index:1000;
 }
 
 .modalBox{
@@ -162,8 +253,39 @@ background:var(--card);
 padding:20px;
 border-radius:12px;
 width:85%;
+max-width:400px;
+max-height:80vh;
+overflow-y:auto;
 text-align:center;
+border:2px solid var(--primary);
 }
+
+/* ADMIN */
+.adminOnly{
+display:none;
+background:#0a1f15;
+padding:15px;
+border-radius:10px;
+margin-top:20px;
+border:1px solid var(--primary);
+}
+
+.adminSection{
+background:#0a1f15;
+padding:15px;
+border-radius:10px;
+margin-top:15px;
+}
+
+.badge{
+padding:3px 8px;
+border-radius:4px;
+font-size:11px;
+font-weight:bold;
+}
+.badgeSuccess{background:var(--success);}
+.badgeDanger{background:var(--danger);}
+.badgeWarning{background:var(--warning);}
 
 /* FOOTER */
 .footer{
@@ -174,7 +296,7 @@ opacity:0.9;
 }
 
 .footer a{
-color:#5ce77a;
+color:#22c55e;
 text-decoration:none;
 display:block;
 margin-top:8px;
@@ -185,15 +307,16 @@ margin-top:8px;
 <body>
 
 <header>
-<div class="logo">
-<img src="images/SADEEQ.PNG">
+<div class="logoContainer">
+  <img src="images/SADEEQ.png" alt="Company Logo" id="companyLogo">
+  <span class="companyBadge" id="companyBadge">LOADING</span>
 </div>
-<h3>SADEEQ DATA HUB</h3>
 <div onclick="showSection('profile')">👤</div>
 </header>
 
 <!-- HOME -->
 <section id="home" class="section active">
+
 <h3 id="usernameDisplay"></h3>
 
 <div class="walletCard">
@@ -201,12 +324,20 @@ margin-top:8px;
 <strong id="walletBalance">₦0</strong>
 </div>
 
+<div class="adminWalletCard adminOnly">
+<p>Admin Profit Wallet</p>
+<strong id="adminWalletBalance">₦0</strong>
+</div>
+
 <div class="quickActions">
 <div class="quickCard" onclick="showSection('data')">📶 Buy Data</div>
+<div class="quickCard airtimeOnly" onclick="showSection('airtime')">📞 Buy Airtime</div>
 <div class="quickCard" onclick="showSection('fund')">💰 Fund Wallet</div>
+<div class="quickCard adminOnly" onclick="showSection('profitDashboard')">📊 Profit</div>
 </div>
 
 <div id="transactionHistory"></div>
+
 </section>
 
 <!-- FUND -->
@@ -214,81 +345,181 @@ margin-top:8px;
 <h3>Fund Wallet</h3>
 
 <div class="walletCard">
-<p id="bankName">Bank</p>
+<p id="bankName">Bank Name</p>
 <strong id="accountNumber">0000000000</strong>
+<p id="accountName">Account Name</p>
 <button onclick="copyAccount()">Copy Account Number</button>
 </div>
 
+<button onclick="openFundModal()">💳 Fund via Paystack</button>
 <button onclick="showSection('home')">⬅ Back</button>
 </section>
 
 <!-- DATA -->
 <section id="data" class="section">
-
 <button onclick="showSection('home')">⬅ Back</button>
-
 <h3>Select Network</h3>
 
 <div class="networkGrid">
-
-<div class="networkItem" onclick="selectNetwork('mtn', this)">
-<img src="images/mtn.png"><p>MTN</p>
+<div class="networkItem" onclick="selectNetwork('mtn', this)"><img src="images/mtn.png" alt="MTN"></div>
+<div class="networkItem" onclick="selectNetwork('glo', this)"><img src="images/glo.png" alt="GLO"></div>
+<div class="networkItem" onclick="selectNetwork('airtel', this)"><img src="images/airtel.png" alt="AIRTEL"></div>
 </div>
 
-<div class="networkItem" onclick="selectNetwork('glo', this)">
-<img src="images/glo.png"><p>GLO</p>
-</div>
-
-<div class="networkItem" onclick="selectNetwork('airtel', this)">
-<img src="images/airtel.png"><p>AIRTEL</p>
-</div>
-
-</div>
-
-<input id="dataPhone" placeholder="Phone Number">
-
+<input id="dataPhone" type="tel" placeholder="Phone Number">
 <div id="planList"></div>
-
 </section>
 
-<!-- HISTORY -->
+<!-- AIRTIME -->
+<section id="airtime" class="section airtimeOnly">
+<button onclick="showSection('home')">⬅ Back</button>
+<h3>Select Network</h3>
+
+<div class="networkGrid">
+<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('mtn', this)"><img src="images/mtn.png" alt="MTN"></div>
+<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('glo', this)"><img src="images/glo.png" alt="GLO"></div>
+<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('airtel', this)"><img src="images/airtel.png" alt="AIRTEL"></div>
+</div>
+
+<input id="airtimePhone" type="tel" placeholder="Phone Number">
+<input id="airtimeAmount" type="number" placeholder="Amount">
+<button onclick="openAirtimePin()">Buy Airtime</button>
+</section>
+
+<!-- TRANSACTIONS -->
 <section id="transactions" class="section">
 <button onclick="showSection('home')">⬅ Back</button>
+<h3>All Transactions</h3>
 <div id="allTransactions"></div>
+</section>
+
+<!-- ADMIN: PROFIT DASHBOARD -->
+<section id="profitDashboard" class="section adminOnly">
+<button onclick="showSection('home')">⬅ Back</button>
+<h3>📊 Profit Dashboard</h3>
+
+<div class="adminSection">
+  <strong>Total Profit: <span id="totalProfit">₦0</span></strong><br>
+  <strong>Admin Wallet: <span id="adminWalletBalance2">₦0</span></strong>
+</div>
+
+<div class="adminSection">
+  <input type="date" id="profitFrom">
+  <input type="date" id="profitTo">
+  <button onclick="loadProfitDashboard()">Filter</button>
+  <table id="profitTable"></table>
+</div>
+</section>
+
+<!-- ADMIN: TOP USERS MANAGER -->
+<section id="topUsersManager" class="section adminOnly">
+<button onclick="showSection('profile')">⬅ Back</button>
+<h3>🔥 Top Users Manager</h3>
+
+<div class="adminSection">
+  <input id="topUserEmail" type="email" placeholder="User Email">
+  <button onclick="addTopUser()" class="successBtn">Add Top User</button>
+  <div id="topUsersList"></div>
+</div>
+</section>
+
+<!-- ADMIN: PLANS MANAGER -->
+<section id="plansManager" class="section adminOnly">
+<button onclick="showSection('profile')">⬅ Back</button>
+<h3>📱 Plans Manager</h3>
+
+<div class="adminSection">
+  <h4>Add New Plan</h4>
+  <input id="newPlanId" type="number" placeholder="Plan ID (VTpass)">
+  <select id="newPlanNetwork">
+    <option value="">Select Network</option>
+    <option value="MTN">MTN</option>
+    <option value="GLO">GLO</option>
+    <option value="AIRTEL">AIRTEL</option>
+    <option value="9MOBILE">9MOBILE</option>
+  </select>
+  <input id="newPlanName" placeholder="Plan Name e.g 1GB SME">
+  <input id="newPlanPrice" type="number" placeholder="User Price">
+  <input id="newPlanTopPrice" type="number" placeholder="Top User Price">
+  <input id="newPlanCost" type="number" placeholder="Your Cost">
+  <input id="newPlanValidity" placeholder="Validity e.g 30 Days">
+  <label><input id="newPlanRestricted" type="checkbox"> Restricted to my company</label>
+  <button onclick="addPlan()" class="successBtn">Add Plan</button>
+</div>
+
+<div class="adminSection">
+  <h4>All Plans</h4>
+  <div id="adminPlansList"></div>
+</div>
+</section>
+
+<!-- ADMIN: USERS MANAGER -->
+<section id="usersManager" class="section adminOnly">
+<button onclick="showSection('profile')">⬅ Back</button>
+<h3>👥 Users Manager</h3>
+
+<div class="adminSection">
+  <input id="userSearch" placeholder="Search username or email" oninput="loadAdminUsers()">
+  <div id="adminUsersList"></div>
+</div>
+</section>
+
+<!-- ADMIN: WITHDRAWALS -->
+<section id="withdrawals" class="section adminOnly">
+<button onclick="showSection('profile')">⬅ Back</button>
+<h3>💸 Admin Withdrawals</h3>
+
+<div class="adminSection">
+  <input id="withdrawAmount" type="number" placeholder="Amount">
+  <input id="withdrawBank" placeholder="Bank Name">
+  <input id="withdrawAccountNumber" placeholder="Account Number">
+  <input id="withdrawAccountName" placeholder="Account Name">
+  <button onclick="requestWithdrawal()" class="primaryBtn">Request Withdrawal</button>
+</div>
+
+<div class="adminSection">
+  <h4>Withdrawal History</h4>
+  <div id="withdrawalsList"></div>
+</div>
 </section>
 
 <!-- PROFILE -->
 <section id="profile" class="section">
-
 <button onclick="showSection('home')">⬅ Back</button>
-
 <button onclick="openModal('passwordModal')">Change Password</button>
 <button onclick="openModal('pinModalBox')">Change PIN</button>
-<button onclick="toggleBiometric()">Toggle Biometric</button>
 <button onclick="logout()">Logout</button>
+
+<!-- ADMIN PANEL -->
+<div class="adminOnly">
+<h3>Admin Tools</h3>
+<button onclick="showSection('profitDashboard')">📊 Profit Dashboard</button>
+<button onclick="showSection('plansManager')">📱 Plans Manager</button>
+<button onclick="showSection('usersManager')">👥 Users Manager</button>
+<button onclick="showSection('topUsersManager')">🔥 Top Users Manager</button>
+<button onclick="showSection('withdrawals')">💸 Withdrawals</button>
+
+<hr>
+
+<h3>Transaction Reversal</h3>
+<input id="reverseRef" placeholder="Transaction Reference">
+<button onclick="reverseTransaction()" class="dangerBtn">Reverse Transaction</button>
+</div>
 
 <div class="footer">
 <p>Need Help?</p>
-
-<a href="https://wa.me/2347047457735" target="_blank">
-📞 Contact Support (08131375356)
-</a>
-
-<a href="https://wa.me/2348117988561" target="_blank">
-👨‍💻 Contact Developer (0811 798 8561)
-</a>
-
-<p style="margin-top:10px;">© SADEEQ DATA PLUG NIG LTD
-</p>
-DEVELOPED BY MAYCONNECT TECHNOLOGIES NIG LTD</P>
+<a href="https://wa.me/2348131375356" target="_blank">📞 Support (08131375356)</a>
+<a href="https://wa.me/2348117988561" target="_blank">👨‍💻 Developer (08117988561)</a>
+<p>© SADEEQ DATA HUB NIG LTD</p>
+<p>DEVELOPED BY MAYCONNECT TECHNOLOGIES NIG LTD</p>
 </div>
+
 </section>
 
 <!-- PIN MODAL -->
 <div id="pinModal" class="modal">
 <div class="modalBox">
-<h3>Enter PIN</h3>
-<input id="pinInput" placeholder="Enter PIN">
+<input id="pinInput" type="password" maxlength="4" placeholder="Enter PIN">
 <button onclick="confirmPurchase()">Confirm</button>
 <button onclick="closeModal('pinModal')">Cancel</button>
 </div>
@@ -297,8 +528,8 @@ DEVELOPED BY MAYCONNECT TECHNOLOGIES NIG LTD</P>
 <!-- PASSWORD -->
 <div id="passwordModal" class="modal">
 <div class="modalBox">
-<input id="oldPassword" placeholder="Old Password">
-<input id="newPassword" placeholder="New Password">
+<input id="oldPassword" type="password" placeholder="Old Password">
+<input id="newPassword" type="password" placeholder="New Password">
 <button onclick="submitPassword()">Update</button>
 <button onclick="closeModal('passwordModal')">Cancel</button>
 </div>
@@ -307,10 +538,25 @@ DEVELOPED BY MAYCONNECT TECHNOLOGIES NIG LTD</P>
 <!-- PIN CHANGE -->
 <div id="pinModalBox" class="modal">
 <div class="modalBox">
-<input id="oldPin" placeholder="Old PIN">
-<input id="newPin" placeholder="New PIN">
+<input id="oldPin" type="password" maxlength="4" placeholder="Old PIN">
+<input id="newPin" type="password" maxlength="4" placeholder="New PIN">
 <button onclick="submitPin()">Update</button>
 <button onclick="closeModal('pinModalBox')">Cancel</button>
+</div>
+</div>
+
+<!-- EDIT PLAN MODAL -->
+<div id="editPlanModal" class="modal">
+<div class="modalBox">
+  <h3>Edit Plan</h3>
+  <input id="editPlanName" placeholder="Plan Name">
+  <input id="editPlanPrice" type="number" placeholder="User Price">
+  <input id="editPlanTopPrice" type="number" placeholder="Top User Price">
+  <input id="editPlanCost" type="number" placeholder="Your Cost">
+  <input id="editPlanValidity" placeholder="Validity e.g 30 Days">
+  <label><input id="editPlanRestricted" type="checkbox"> Restricted to my company</label>
+  <button onclick="savePlanEdit()" class="successBtn">Save Changes</button>
+  <button onclick="closeModal('editPlanModal')" class="dangerBtn">Cancel</button>
 </div>
 </div>
 
@@ -328,6 +574,5 @@ DEVELOPED BY MAYCONNECT TECHNOLOGIES NIG LTD</P>
 </div>
 
 <script src="app.js"></script>
-
 </body>
 </html>
