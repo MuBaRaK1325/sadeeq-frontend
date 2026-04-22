@@ -1,17 +1,15 @@
 const API = "https://mayconnect-backend-1.onrender.com";
-const COMPANY_NAME = "SADEEQ DATA HUB"; // CHANGE THIS PER COMPANY
-const COMPANY_SLUG = "SADEEQ"; // CHANGE THIS PER COMPANY
 
 let cachedPlans = [];
-let cachedAdminPlans = [];
+let cachedAdminPlans = []; // for admin edit
 let currentUser = null;
 let ws = null;
 
 let selectedNetwork = null;
 let selectedPlan = null;
 let airtimeNetwork = null;
-let actionType = null;
-let editingPlanId = null;
+let actionType = null; // "DATA" or "AIRTIME"
+let editingPlanId = null; // for edit modal
 
 /* ================= HELPERS ================= */
 function getToken() { return localStorage.getItem("token"); }
@@ -21,7 +19,7 @@ function formatDate(date) { return new Date(date).toLocaleDateString('en-GB'); }
 
 /* ================= MESSAGE ================= */
 function showMsg(msg, type = "info") {
-  const color = type === "error"? "#ff4d4d" : type === "success"? "#00c853" : "#2196f3";
+  const color = type === "error" ? "#ff4d4d" : type === "success" ? "#00c853" : "#2196f3";
   el("msgBox").innerHTML = `
     <div style="text-align:center">
       <p style="color:${color}">${msg}</p>
@@ -51,6 +49,7 @@ async function loadDashboard() {
   if (!checkAuth()) return;
 
   try {
+    const payload = JSON.parse(atob(getToken().split(".")[1]));
     const res = await fetch(API + "/api/me", { headers: { Authorization: "Bearer " + getToken() } });
     currentUser = await res.json();
   } catch {
@@ -58,19 +57,15 @@ async function loadDashboard() {
     return;
   }
 
+  // Update UI with user info
   if (el("usernameDisplay")) el("usernameDisplay").innerText = "Hello " + currentUser.username;
-  // OVERRIDE: Use hardcoded company name, not DB value
-  if (el("companyBadge")) el("companyBadge").innerText = COMPANY_NAME.toUpperCase();
-
+  if (el("companyBadge")) el("companyBadge").innerText = currentUser.company.toUpperCase();
+  
+  // Show admin wallet + admin panels
   if (currentUser && currentUser.is_admin === true) {
     document.querySelectorAll(".adminOnly").forEach(e => e.style.display = "block");
     if (el("adminWalletBalance")) el("adminWalletBalance").innerText = formatNaira(currentUser.admin_wallet);
     if (el("adminWalletBalance2")) el("adminWalletBalance2").innerText = formatNaira(currentUser.admin_wallet);
-  }
-
-  // Hide airtime for non-mayconnect companies
-  if (currentUser.company!== "mayconnect") {
-    document.querySelectorAll(".airtimeOnly").forEach(e => e.style.display = "none");
   }
 
   initNavigation();
@@ -133,7 +128,7 @@ async function fetchTransactions() {
 function txCard(t) {
   const div = document.createElement("div");
   div.className = "transactionCard";
-  const statusColor = t.status === "SUCCESS"? "#00c853" : t.status === "FAILED"? "#ff4d4d" : "#ffa000";
+  const statusColor = t.status === "SUCCESS" ? "#00c853" : t.status === "FAILED" ? "#ff4d4d" : "#ffa000";
   div.innerHTML = `
     <strong>${t.type}</strong> ${formatNaira(t.amount)}<br>
     ${t.phone || t.network || ""}<br>
@@ -142,15 +137,14 @@ function txCard(t) {
   return div;
 }
 
-/* ================= PLANS - CLIENT SIDE FILTER ================= */
+/* ================= PLANS - WITH RESTRICTED FILTER ================= */
 async function loadPlans() {
   try {
     const res = await fetch(API + "/api/plans", {
       headers: { Authorization: "Bearer " + getToken() }
     });
     const data = await res.json();
-    // DOUBLE FILTER: Remove restricted plans not belonging to this frontend
-    cachedPlans = Array.isArray(data)? data.filter(p =>!p.restricted || p.company === COMPANY_SLUG) : [];
+    cachedPlans = Array.isArray(data) ? data : [];
   } catch (e) {
     console.log("PLANS ERROR", e);
   }
@@ -172,7 +166,7 @@ function selectAirtimeNetwork(network, element) {
   if (element) element.classList.add("active");
 }
 
-/* ================= RENDER PLANS ================= */
+/* ================= RENDER PLANS - SHOW TOP USER PRICE ================= */
 function renderPlans() {
   const list = el("planList");
   if (!list) return;
@@ -189,9 +183,9 @@ function renderPlans() {
   filtered.forEach(p => {
     const div = document.createElement("div");
     div.className = "planItem";
-    const priceDisplay = currentUser?.is_top_user && p.top_price? p.top_price : p.price;
-    const badge = currentUser?.is_top_user && p.top_price? `<span class="topUserBadge">TOP</span>` : "";
-
+    const priceDisplay = currentUser?.is_top_user && p.top_price ? p.top_price : p.price;
+    const badge = currentUser?.is_top_user && p.top_price ? `<span class="topUserBadge">TOP</span>` : "";
+    
     div.innerHTML = `
       <strong>${p.name}</strong> ${badge}<br>
       ${p.validity || ""}<br>
@@ -199,7 +193,7 @@ function renderPlans() {
     `;
 
     div.onclick = () => {
-      selectedPlan = {...p, price: priceDisplay};
+      selectedPlan = {...p, price: priceDisplay}; // use discounted price
       actionType = "DATA";
       openConfirmModal(selectedPlan);
     };
@@ -333,7 +327,7 @@ async function confirmFund() {
 async function loadProfitDashboard() {
   const from = el("profitFrom")?.value || new Date(new Date().setDate(1)).toISOString().split('T')[0];
   const to = el("profitTo")?.value || new Date().toISOString().split('T')[0];
-
+  
   showLoader("Loading profit data...");
   try {
     const res = await fetch(`${API}/admin/profit?from=${from}&to=${to}`, {
@@ -377,7 +371,7 @@ async function loadTopUsers() {
         list.innerHTML += `<div class="userCard">
           <strong>${u.username}</strong> - ${u.email}<br>
           Spent: ${formatNaira(u.total_spent)} | Profit: ${formatNaira(u.total_profit_generated)}
-          ${u.is_top_user? `<button onclick="removeTopUser('${u.email}')" class="dangerBtn">Remove</button>` : ''}
+          ${u.is_top_user ? `<button onclick="removeTopUser('${u.email}')" class="dangerBtn">Remove</button>` : ''}
         </div>`;
       });
     }
@@ -397,7 +391,7 @@ async function addTopUser() {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) loadTopUsers();
   } catch {
     hideLoader();
@@ -415,7 +409,7 @@ async function removeTopUser(email) {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) loadTopUsers();
   } catch {
     hideLoader();
@@ -423,26 +417,28 @@ async function removeTopUser(email) {
   }
 }
 
-/* ================= ADMIN: PLANS MANAGER ================= */
+/* ================= ADMIN: PLANS MANAGER - FULL CONTROL ================= */
 async function loadAdminPlans() {
   try {
     const res = await fetch(API + "/admin/plans", {
       headers: { Authorization: "Bearer " + getToken() }
     });
     const plans = await res.json();
-    cachedAdminPlans = plans;
+    cachedAdminPlans = plans; // cache for editing
     const list = el("adminPlansList");
     if (list) {
       list.innerHTML = "";
       plans.forEach(p => {
-        const statusColor = p.is_active? "#00c853" : "#ff4d4d";
-        const restrictBadge = p.restricted? `<span class="badge badgeWarning">RESTRICTED</span>` : '';
+        const statusColor = p.is_active ? "#00c853" : "#ff4d4d";
+        const restrictBadge = p.restricted ? `<span class="badge badgeWarning">RESTRICTED</span>` : '';
+        const providerBadge = p.provider ? `<span class="badge">${p.provider.toUpperCase()}</span>` : '';
         list.innerHTML += `<div class="planCard">
-          <strong>${p.name}</strong> - ${p.network} ${restrictBadge}<br>
+          <strong>${p.name}</strong> - ${p.network} ${restrictBadge} ${providerBadge}<br>
           Price: ${formatNaira(p.price)} | Top: ${formatNaira(p.top_price)} | Cost: ${formatNaira(p.cost)}<br>
-          <span style="color:${statusColor}">${p.is_active? 'Active' : 'Disabled'}</span>
+          Provider: ${p.provider || 'N/A'} | Net ID: ${p.network_id || 'N/A'} | API ID: ${p.api_plan_id || 'N/A'}<br>
+          <span style="color:${statusColor}">${p.is_active ? 'Active' : 'Disabled'}</span>
           <button onclick="editPlan(${p.id})" class="primaryBtn">Edit</button>
-          <button onclick="togglePlan(${p.id}, ${!p.is_active})" class="dangerBtn">${p.is_active? 'Disable' : 'Enable'}</button>
+          <button onclick="togglePlan(${p.id}, ${!p.is_active})" class="dangerBtn">${p.is_active ? 'Disable' : 'Enable'}</button>
         </div>`;
       });
     }
@@ -458,11 +454,14 @@ async function addPlan() {
     top_price: el("newPlanTopPrice").value,
     cost: el("newPlanCost").value,
     validity: el("newPlanValidity").value,
-    restricted: el("newPlanRestricted").checked
+    restricted: el("newPlanRestricted").checked,
+    provider: el("newPlanProvider").value,
+    network_id: el("newPlanNetworkId").value,
+    api_plan_id: el("newPlanApiId").value
   };
-
-  if (!plan.plan_id ||!plan.network ||!plan.name ||!plan.price ||!plan.cost) {
-    return showMsg("Fill all required fields", "error");
+  
+  if (!plan.plan_id ||!plan.network ||!plan.name ||!plan.price ||!plan.cost ||!plan.provider ||!plan.network_id ||!plan.api_plan_id) {
+    return showMsg("Fill all required fields including provider details", "error");
   }
 
   showLoader("Adding plan...");
@@ -474,10 +473,11 @@ async function addPlan() {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) {
       loadAdminPlans();
-      loadPlans();
+      loadPlans(); // refresh user plans too
+      // clear form
       el("newPlanId").value = "";
       el("newPlanName").value = "";
       el("newPlanPrice").value = "";
@@ -485,6 +485,9 @@ async function addPlan() {
       el("newPlanCost").value = "";
       el("newPlanValidity").value = "";
       el("newPlanRestricted").checked = false;
+      el("newPlanProvider").value = "";
+      el("newPlanNetworkId").value = "";
+      el("newPlanApiId").value = "";
     }
   } catch {
     hideLoader();
@@ -502,7 +505,7 @@ async function togglePlan(id, is_active) {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) {
       loadAdminPlans();
       loadPlans();
@@ -516,35 +519,43 @@ async function togglePlan(id, is_active) {
 async function editPlan(id) {
   const plan = cachedAdminPlans.find(p => p.id === id);
   if (!plan) return showMsg("Plan not found", "error");
-
+  
   editingPlanId = id;
-
+  
   el("editPlanName").value = plan.name || "";
   el("editPlanPrice").value = plan.price || "";
   el("editPlanTopPrice").value = plan.top_price || "";
   el("editPlanCost").value = plan.cost || "";
   el("editPlanValidity").value = plan.validity || "";
   el("editPlanRestricted").checked = plan.restricted || false;
-
+  el("editPlanProvider").value = plan.provider || "";
+  el("editPlanNetworkId").value = plan.network_id || "";
+  el("editPlanApiId").value = plan.api_plan_id || "";
+  el("editPlanActive").checked = plan.is_active !== false;
+  
   openModal("editPlanModal");
 }
 
 async function savePlanEdit() {
   if (!editingPlanId) return;
-
+  
   const updated = {
     name: el("editPlanName").value,
     price: el("editPlanPrice").value,
     top_price: el("editPlanTopPrice").value,
     cost: el("editPlanCost").value,
     validity: el("editPlanValidity").value,
-    restricted: el("editPlanRestricted").checked
+    restricted: el("editPlanRestricted").checked,
+    provider: el("editPlanProvider").value,
+    network_id: el("editPlanNetworkId").value,
+    api_plan_id: el("editPlanApiId").value,
+    is_active: el("editPlanActive").checked
   };
-
-  if (!updated.name ||!updated.price ||!updated.cost) {
-    return showMsg("Name, Price and Cost are required", "error");
+  
+  if (!updated.name || !updated.price || !updated.cost || !updated.provider || !updated.network_id || !updated.api_plan_id) {
+    return showMsg("Name, Price, Cost, Provider, Network ID and API Plan ID are required", "error");
   }
-
+  
   showLoader("Updating plan...");
   try {
     const res = await fetch(`${API}/admin/plans/${editingPlanId}`, {
@@ -555,7 +566,7 @@ async function savePlanEdit() {
     const data = await res.json();
     hideLoader();
     closeModal("editPlanModal");
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) {
       loadAdminPlans();
       loadPlans();
@@ -580,9 +591,10 @@ async function loadAdminUsers() {
       users.forEach(u => {
         list.innerHTML += `<div class="userCard">
           <strong>${u.username}</strong> - ${u.email}<br>
-          Wallet: ${formatNaira(u.wallet_balance)} | Top User: ${u.is_top_user? 'Yes' : 'No'}<br>
+          Wallet: ${formatNaira(u.wallet_balance)} | Phone: ${u.phone || 'N/A'}<br>
+          Top User: ${u.is_top_user ? 'Yes' : 'No'}<br>
           <button onclick="toggleUserTop(${u.id}, ${!u.is_top_user})" class="primaryBtn">
-            ${u.is_top_user? 'Remove Top' : 'Make Top'}
+            ${u.is_top_user ? 'Remove Top' : 'Make Top'}
           </button>
         </div>`;
       });
@@ -600,7 +612,7 @@ async function toggleUserTop(id, is_top_user) {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) loadAdminUsers();
   } catch {
     hideLoader();
@@ -619,12 +631,12 @@ async function loadWithdrawals() {
     if (list) {
       list.innerHTML = "";
       wds.forEach(w => {
-        const statusColor = w.status === "PAID"? "#00c853" : w.status === "PENDING"? "#ffa000" : "#ff4d4d";
+        const statusColor = w.status === "PAID" ? "#00c853" : w.status === "PENDING" ? "#ffa000" : "#ff4d4d";
         list.innerHTML += `<div class="withdrawCard">
           <strong>${formatNaira(w.amount)}</strong> - ${w.bank_name}<br>
           ${w.account_number} - ${w.account_name}<br>
           <span style="color:${statusColor}">${w.status}</span>
-          ${w.status === "PENDING"? `<button onclick="approveWithdrawal('${w.reference}')" class="primaryBtn">Mark Paid</button>` : ""}
+          ${w.status === "PENDING" ? `<button onclick="approveWithdrawal('${w.reference}')" class="primaryBtn">Mark Paid</button>` : ""}
         </div>`;
       });
     }
@@ -636,7 +648,7 @@ async function requestWithdrawal() {
   const bank_name = el("withdrawBank").value;
   const account_number = el("withdrawAccountNumber").value;
   const account_name = el("withdrawAccountName").value;
-
+  
   if (!amount ||!bank_name ||!account_number ||!account_name) {
     return showMsg("Fill all fields", "error");
   }
@@ -650,10 +662,10 @@ async function requestWithdrawal() {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) {
       loadWithdrawals();
-      loadDashboard();
+      loadDashboard(); // refresh admin_wallet
     }
   } catch {
     hideLoader();
@@ -671,7 +683,7 @@ async function approveWithdrawal(reference) {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) {
       loadWithdrawals();
       loadDashboard();
@@ -695,7 +707,7 @@ async function reverseTransaction() {
   });
   const data = await res.json();
   hideLoader();
-  showMsg(data.message, res.ok? "success" : "error");
+  showMsg(data.message, res.ok ? "success" : "error");
   if (res.ok) fetchTransactions();
 }
 
@@ -750,7 +762,7 @@ async function submitPassword() {
   });
   const data = await res.json();
   hideLoader();
-  showMsg(data.message, res.ok? "success" : "error");
+  showMsg(data.message, res.ok ? "success" : "error");
 }
 
 async function submitPin() {
@@ -766,7 +778,7 @@ async function submitPin() {
   });
   const data = await res.json();
   hideLoader();
-  showMsg(data.message, res.ok? "success" : "error");
+  showMsg(data.message, res.ok ? "success" : "error");
 }
 
 /* ================= ADMIN DATA LOADER ================= */

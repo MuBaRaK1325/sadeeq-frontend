@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sadeeq VTU</title>
+<title>SADEEQ VTU Dashboard</title>
 
 <style>
 :root{
---primary:#16a34a;
---bg:#041208;
---card:#0d1f14;
---accent:#22c55e;
+--primary:#17b65f;
+--bg:#051009;
+--card:#0b2a17;
+--accent:#13d178;
 --success:#00c853;
 --danger:#ff4d4d;
 --warning:#ffa000;
@@ -69,7 +69,7 @@ margin:20px;
 padding:15px;
 border-radius:12px;
 text-align:center;
-background:linear-gradient(135deg,#0a1f15,#14532d);
+background:linear-gradient(135deg,#0f351e,#1a7e4f);
 border:1px solid var(--primary);
 }
 
@@ -101,7 +101,7 @@ padding:12px;
 margin-top:10px;
 border-radius:8px;
 border:none;
-background:#13291a;
+background:#1a3a2b;
 color:white;
 box-sizing:border-box;
 }
@@ -175,7 +175,7 @@ cursor:pointer;
 position:relative;
 transition:0.2s;
 }
-.planItem:hover{background:#163020;}
+.planItem:hover{background:#113a29;}
 
 .topUserBadge{
 position:absolute;
@@ -214,9 +214,9 @@ overflow:hidden;
 th,td{
 padding:10px;
 text-align:left;
-border-bottom:1px solid #13291a;
+border-bottom:1px solid #1a3a28;
 }
-th{background:#163020;}
+th{background:#113a29;}
 
 /* NAV */
 .bottomNav{
@@ -227,7 +227,7 @@ background:var(--card);
 display:flex;
 justify-content:space-around;
 padding:8px 0;
-border-top:1px solid #13291a;
+border-top:1px solid #1a3a27;
 }
 
 .bottomNav button{
@@ -257,13 +257,12 @@ max-width:400px;
 max-height:80vh;
 overflow-y:auto;
 text-align:center;
-border:2px solid var(--primary);
 }
 
 /* ADMIN */
 .adminOnly{
 display:none;
-background:#0a1f15;
+background:#0f3520;
 padding:15px;
 border-radius:10px;
 margin-top:20px;
@@ -271,7 +270,7 @@ border:1px solid var(--primary);
 }
 
 .adminSection{
-background:#0a1f15;
+background:#0f3520;
 padding:15px;
 border-radius:10px;
 margin-top:15px;
@@ -296,7 +295,7 @@ opacity:0.9;
 }
 
 .footer a{
-color:#22c55e;
+color:#3cff94;
 text-decoration:none;
 display:block;
 margin-top:8px;
@@ -305,10 +304,75 @@ margin-top:8px;
 </head>
 
 <body>
+<!-- ADD PLAN MODAL - UPDATED -->
+<div id="addPlanModal" class="modal">
+<div class="modalBox">
+  <h3>Add New Plan</h3>
+  <input id="newPlanId" type="number" placeholder="Plan ID (from provider)" />
+  <select id="newPlanNetwork">
+    <option value="">Select Network</option>
+    <option value="MTN">MTN</option>
+    <option value="GLO">GLO</option>
+    <option value="AIRTEL">AIRTEL</option>
+    <option value="9MOBILE">9MOBILE</option>
+  </select>
+  <input id="newPlanName" placeholder="Plan Name e.g 1GB SME" />
+  <input id="newPlanPrice" type="number" step="0.01" placeholder="Selling Price" />
+  <input id="newPlanTopPrice" type="number" step="0.01" placeholder="Top User Price" />
+  <input id="newPlanCost" type="number" step="0.01" placeholder="Your Cost" />
+  <input id="newPlanValidity" placeholder="Validity e.g 30 Days" />
+  <select id="newPlanProvider">
+    <option value="">Select Provider</option>
+    <option value="maitama">Maitama</option>
+    <option value="cheapdatahub">CheapDataHub</option>
+    <option value="subpadi">SubPadi</option>
+  </select>
+  <input id="newPlanNetworkId" placeholder="Network ID: 1=MTN, 2=Airtel, 3=Glo, 4=9mobile" />
+  <input id="newPlanApiId" placeholder="API Plan ID from provider dashboard" />
+  <label><input id="newPlanRestricted" type="checkbox"> Restricted to my company</label>
+  <div style="display:flex;gap:10px;margin-top:15px;">
+    <button onclick="addPlan()" class="successBtn">Add Plan</button>
+    <button onclick="closeModal('addPlanModal')" class="dangerBtn">Cancel</button>
+  </div>
+</div>
+</div>
+
+<!-- EDIT PLAN MODAL - UPDATED -->
+<div id="editPlanModal" class="modal">
+<div class="modalBox">
+  <h3>Edit Plan</h3>
+  <input type="hidden" id="editPlanId" />
+  <select id="editPlanNetwork">
+    <option value="MTN">MTN</option>
+    <option value="AIRTEL">AIRTEL</option>
+    <option value="GLO">GLO</option>
+    <option value="9MOBILE">9MOBILE</option>
+  </select>
+  <input id="editPlanName" placeholder="Plan Name" />
+  <input id="editPlanPrice" type="number" step="0.01" placeholder="Selling Price" />
+  <input id="editPlanTopPrice" type="number" step="0.01" placeholder="Top User Price" />
+  <input id="editPlanCost" type="number" step="0.01" placeholder="Your Cost" />
+  <input id="editPlanValidity" placeholder="Validity" />
+  <select id="editPlanProvider">
+    <option value="">Select Provider</option>
+    <option value="maitama">Maitama</option>
+    <option value="cheapdatahub">CheapDataHub</option>
+    <option value="subpadi">SubPadi</option>
+  </select>
+  <input id="editPlanNetworkId" placeholder="Network ID" />
+  <input id="editPlanApiId" placeholder="API Plan ID" />
+  <label><input id="editPlanRestricted" type="checkbox"> Restricted to my company</label>
+  <label><input id="editPlanActive" type="checkbox"> Active</label>
+  <div style="display:flex;gap:10px;margin-top:15px;">
+    <button onclick="savePlanEdit()" class="successBtn">Update Plan</button>
+    <button onclick="closeModal('editPlanModal')" class="dangerBtn">Cancel</button>
+  </div>
+</div>
+</div>
 
 <header>
 <div class="logoContainer">
-  <img src="images/SADEEQ.png" alt="Company Logo" id="companyLogo">
+  <img src="images/SADEEQ.PNG" alt="Company Logo" id="companyLogo">
   <span class="companyBadge" id="companyBadge">LOADING</span>
 </div>
 <div onclick="showSection('profile')">👤</div>
@@ -331,7 +395,7 @@ margin-top:8px;
 
 <div class="quickActions">
 <div class="quickCard" onclick="showSection('data')">📶 Buy Data</div>
-<div class="quickCard airtimeOnly" onclick="showSection('airtime')">📞 Buy Airtime</div>
+<div class="quickCard" onclick="showSection('airtime')">📞 Buy Airtime</div>
 <div class="quickCard" onclick="showSection('fund')">💰 Fund Wallet</div>
 <div class="quickCard adminOnly" onclick="showSection('profitDashboard')">📊 Profit</div>
 </div>
@@ -372,7 +436,7 @@ margin-top:8px;
 </section>
 
 <!-- AIRTIME -->
-<section id="airtime" class="section airtimeOnly">
+<section id="airtime" class="section">
 <button onclick="showSection('home')">⬅ Back</button>
 <h3>Select Network</h3>
 
@@ -430,22 +494,7 @@ margin-top:8px;
 <h3>📱 Plans Manager</h3>
 
 <div class="adminSection">
-  <h4>Add New Plan</h4>
-  <input id="newPlanId" type="number" placeholder="Plan ID (VTpass)">
-  <select id="newPlanNetwork">
-    <option value="">Select Network</option>
-    <option value="MTN">MTN</option>
-    <option value="GLO">GLO</option>
-    <option value="AIRTEL">AIRTEL</option>
-    <option value="9MOBILE">9MOBILE</option>
-  </select>
-  <input id="newPlanName" placeholder="Plan Name e.g 1GB SME">
-  <input id="newPlanPrice" type="number" placeholder="User Price">
-  <input id="newPlanTopPrice" type="number" placeholder="Top User Price">
-  <input id="newPlanCost" type="number" placeholder="Your Cost">
-  <input id="newPlanValidity" placeholder="Validity e.g 30 Days">
-  <label><input id="newPlanRestricted" type="checkbox"> Restricted to my company</label>
-  <button onclick="addPlan()" class="successBtn">Add Plan</button>
+  <button onclick="openModal('addPlanModal')" class="successBtn">+ Add New Plan</button>
 </div>
 
 <div class="adminSection">
@@ -511,8 +560,7 @@ margin-top:8px;
 <p>Need Help?</p>
 <a href="https://wa.me/2348131375356" target="_blank">📞 Support (08131375356)</a>
 <a href="https://wa.me/2348117988561" target="_blank">👨‍💻 Developer (08117988561)</a>
-<p>© SADEEQ DATA HUB NIG LTD</p>
-<p>DEVELOPED BY MAYCONNECT TECHNOLOGIES NIG LTD</p>
+<p>© SADEEQ DATA HUB  NIG LTD</p>
 </div>
 
 </section>
@@ -543,21 +591,6 @@ margin-top:8px;
 <input id="newPin" type="password" maxlength="4" placeholder="New PIN">
 <button onclick="submitPin()">Update</button>
 <button onclick="closeModal('pinModalBox')">Cancel</button>
-</div>
-</div>
-
-<!-- EDIT PLAN MODAL -->
-<div id="editPlanModal" class="modal">
-<div class="modalBox">
-  <h3>Edit Plan</h3>
-  <input id="editPlanName" placeholder="Plan Name">
-  <input id="editPlanPrice" type="number" placeholder="User Price">
-  <input id="editPlanTopPrice" type="number" placeholder="Top User Price">
-  <input id="editPlanCost" type="number" placeholder="Your Cost">
-  <input id="editPlanValidity" placeholder="Validity e.g 30 Days">
-  <label><input id="editPlanRestricted" type="checkbox"> Restricted to my company</label>
-  <button onclick="savePlanEdit()" class="successBtn">Save Changes</button>
-  <button onclick="closeModal('editPlanModal')" class="dangerBtn">Cancel</button>
 </div>
 </div>
 
