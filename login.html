@@ -9,10 +9,15 @@
 
 <style>
 
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
 
 body{
-background:#031a0f;
+background:#0a1a03;
 color:white;
 display:flex;
 justify-content:center;
@@ -21,35 +26,80 @@ height:100vh;
 flex-direction:column;
 }
 
+/* LOADER */
+#loginLoader{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#0a1a03;
+display:none;
+align-items:center;
+justify-content:center;
+z-index:9999;
+flex-direction:column;
+}
+
+.loaderRing{
+width:70px;
+height:70px;
+border:6px solid #0d2c05;
+border-top:6px solid rgb(72, 255, 0);
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg)}
+100%{transform:rotate(360deg)}
+}
+
+/* LOGO */
 .logo{
 width:110px;
 height:110px;
 border-radius:50%;
-border:4px solid #22c55e;
+border:4px solid rgb(72, 255, 0);
 padding:8px;
 margin-bottom:40px;
-box-shadow:0 0 20px #22c55e;
+box-shadow:0 0 20px rgb(72, 255, 0);
 }
 
+/* CARD */
 .card{
-background:#052e1c;
+background:#052c07;
 padding:30px;
 border-radius:20px;
 width:90%;
 max-width:380px;
+box-shadow:0 0 30px rgba(72, 255, 0, 0.2);
 }
 
-.inputBox{margin-bottom:18px;position:relative;}
+.title{
+text-align:center;
+font-size:26px;
+margin-bottom:25px;
+}
+
+/* INPUT */
+.inputBox{
+margin-bottom:18px;
+position:relative;
+}
 
 input{
 width:100%;
 padding:14px;
 border-radius:12px;
 border:none;
-background:#02140c;
+background:#020d02;
 color:white;
+font-size:16px;
+outline:none;
 }
 
+/* SHOW BUTTON */
 .showBtn{
 position:absolute;
 right:12px;
@@ -57,46 +107,72 @@ top:50%;
 transform:translateY(-50%);
 background:none;
 border:none;
-color:#4ade80;
+color:rgb(72, 255, 0);
 cursor:pointer;
 }
 
+/* BUTTON */
 .loginBtn{
 width:100%;
 padding:14px;
 border:none;
 border-radius:12px;
-background:#22c55e;
-color:white;
+background:rgb(72, 255, 0);
+color:black;
+font-size:17px;
 margin-top:10px;
+cursor:pointer;
 }
 
+.loginBtn:disabled{
+opacity:0.6;
+}
+
+/* BIOMETRIC */
 .biometric{
 margin-top:16px;
-border:2px dashed #22c55e;
+border:2px dashed rgb(72, 255, 0);
 padding:16px;
 border-radius:12px;
 text-align:center;
+cursor:pointer;
 }
 
+/* SIGNUP */
 .signup{
 margin-top:15px;
-border:2px solid #22c55e;
+border:2px solid rgb(72, 255, 0);
 padding:14px;
 border-radius:12px;
 text-align:center;
 }
 
+a{
+color:white;
+text-decoration:none;
+display:block;
+}
+
 </style>
+
 </head>
 
 <body>
+
+<div id="loginLoader">
+<div class="loaderRing"></div>
+<p style="margin-top:15px">Logging in...</p>
+</div>
 
 <img src="images/SADEEQ.PNG" class="logo">
 
 <div class="card">
 
-<div class="inputBox"><input id="loginUsername" placeholder="Username"></div>
+<div class="title">Welcome Back</div>
+
+<div class="inputBox">
+<input id="loginUsername" placeholder="Username">
+</div>
 
 <div class="inputBox">
 <input id="loginPassword" type="password" placeholder="Password">
@@ -105,9 +181,13 @@ text-align:center;
 
 <button id="loginBtn" class="loginBtn">Login</button>
 
-<div class="biometric" onclick="biometricLogin()">🔐 Fingerprint Login</div>
+<div class="biometric" onclick="biometricLogin()">
+🔐 Login with Fingerprint / Face ID
+</div>
 
-<div class="signup"><a href="signup.html">Create Account</a></div>
+<a href="signup.html">
+<div class="signup">Create Account</div>
+</a>
 
 </div>
 
@@ -115,10 +195,16 @@ text-align:center;
 
 <script>
 function togglePassword(){
-const i=document.getElementById("loginPassword")
-const b=document.querySelector(".showBtn")
-if(i.type==="password"){i.type="text";b.innerText="Hide"}
-else{i.type="password";b.innerText="Show"}
+const input=document.getElementById("loginPassword")
+const btn=document.querySelector(".showBtn")
+
+if(input.type==="password"){
+input.type="text"
+btn.innerText="Hide"
+}else{
+input.type="password"
+btn.innerText="Show"
+}
 }
 </script>
 

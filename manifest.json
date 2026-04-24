@@ -1,11 +1,24 @@
 {
-"name":"MayConnect",
-"short_name":"MayConnect",
-"start_url":"/dashboard.html",
-"display":"standalone",
-"background_color":"#000",
-"theme_color":"#3b78e7",
-"icons":[
-{"src":"images/logo.png","sizes":"192x192","type":"image/png"}
-]
+  "name": "SADEEQ DATA HUB",
+  "short_name": "SADEEQ",
+  "start_url": "/dashboard.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#ca3be7",
+  "description": "Buy cheap data, airtime and pay bills instantly",
+  "icons": [
+    {
+      "src": "images/SADEEQ-512.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/SADEEQ-512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }

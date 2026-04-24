@@ -1,92 +1,20 @@
-[{
-	"resource": "/C:/Users/ASUS/mayconnect-frontend/service-worker.js",
-	"owner": "typescript",
-	"code": "1005",
-	"severity": 8,
-	"message": "';' expected.",
-	"source": "ts",
-	"startLineNumber": 2,
-	"startColumn": 7,
-	"endLineNumber": 2,
-	"endColumn": 8,
-	"modelVersionId": 2,
-	"origin": "extHost1"
-},{
-	"resource": "/C:/Users/ASUS/mayconnect-frontend/service-worker.js",
-	"owner": "typescript",
-	"code": "1005",
-	"severity": 8,
-	"message": "';' expected.",
-	"source": "ts",
-	"startLineNumber": 3,
-	"startColumn": 13,
-	"endLineNumber": 3,
-	"endColumn": 14,
-	"modelVersionId": 2,
-	"origin": "extHost1"
-},{
-	"resource": "/C:/Users/ASUS/mayconnect-frontend/service-worker.js",
-	"owner": "typescript",
-	"code": "1005",
-	"severity": 8,
-	"message": "';' expected.",
-	"source": "ts",
-	"startLineNumber": 4,
-	"startColumn": 12,
-	"endLineNumber": 4,
-	"endColumn": 13,
-	"modelVersionId": 2,
-	"origin": "extHost1"
-},{
-	"resource": "/C:/Users/ASUS/mayconnect-frontend/service-worker.js",
-	"owner": "typescript",
-	"code": "1005",
-	"severity": 8,
-	"message": "';' expected.",
-	"source": "ts",
-	"startLineNumber": 5,
-	"startColumn": 10,
-	"endLineNumber": 5,
-	"endColumn": 11,
-	"modelVersionId": 2,
-	"origin": "extHost1"
-},{
-	"resource": "/C:/Users/ASUS/mayconnect-frontend/service-worker.js",
-	"owner": "typescript",
-	"code": "1005",
-	"severity": 8,
-	"message": "';' expected.",
-	"source": "ts",
-	"startLineNumber": 6,
-	"startColumn": 19,
-	"endLineNumber": 6,
-	"endColumn": 20,
-	"modelVersionId": 2,
-	"origin": "extHost1"
-},{
-	"resource": "/C:/Users/ASUS/mayconnect-frontend/service-worker.js",
-	"owner": "typescript",
-	"code": "1005",
-	"severity": 8,
-	"message": "';' expected.",
-	"source": "ts",
-	"startLineNumber": 7,
-	"startColumn": 14,
-	"endLineNumber": 7,
-	"endColumn": 15,
-	"modelVersionId": 2,
-	"origin": "extHost1"
-},{
-	"resource": "/C:/Users/ASUS/mayconnect-frontend/service-worker.js",
-	"owner": "typescript",
-	"code": "1005",
-	"severity": 8,
-	"message": "';' expected.",
-	"source": "ts",
-	"startLineNumber": 8,
-	"startColumn": 8,
-	"endLineNumber": 8,
-	"endColumn": 9,
-	"modelVersionId": 2,
-	"origin": "extHost1"
-}]
+const CACHE_NAME = 'sadeeq-v1';
+const urlsToCache = [
+  '/',
+  '/dashboard.html',
+  '/images/SADEEQ.png',
+  '/css/style.css',
+  '/js/app.js'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => response || fetch(event.request))
+  );
+});
