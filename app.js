@@ -621,60 +621,133 @@ async function toggleUserTop(id, is_top_user) {
 }
 
 /* ================= ADMIN: WITHDRAWALS ================= */
+
+// Nigerian Banks List - matches backend codes
+const NIGERIAN_BANKS = [
+  "Access Bank", "Citibank", "Ecobank", "Fidelity Bank", "First Bank", "FCMB",
+  "GTBank", "Heritage Bank", "Keystone Bank", "Polaris Bank", "Stanbic IBTC",
+  "Standard Chartered", "Sterling Bank", "Union Bank", "UBA", "Unity Bank",
+  "Wema Bank", "Zenith Bank", "Kuda", "Opay", "Palmpay", "Moniepoint",
+  "VFD Microfinance", "Carbon", "Rubies MFB", "Sparkle"
+];
+
+// Load bank dropdown on page init
+function populateBankDropdown() {
+  const bankSelect = el("withdrawBank");
+  if (!bankSelect) return;
+  
+  bankSelect.innerHTML = '<option value="">Select Bank</option>';
+  NIGERIAN_BANKS.forEach(bank => {
+    bankSelect.innerHTML += `<option value="${bank}">${bank}</option>`;
+  });
+}
+
+// Call this when dashboard loads
+// Add populateBankDropdown() inside your showDashboard() function
+
 async function loadWithdrawals() {
   try {
     const res = await fetch(API + "/admin/withdrawals", {
       headers: { Authorization: "Bearer " + getToken() }
     });
+    if (!res.ok) throw new Error("Failed to fetch");
+    
     const wds = await res.json();
     const list = el("withdrawalsList");
-    if (list) {
-      list.innerHTML = "";
-      wds.forEach(w => {
-        const statusColor = w.status === "PAID" ? "#00c853" : w.status === "PENDING" ? "#ffa000" : "#ff4d4d";
-        list.innerHTML += `<div class="withdrawCard">
-          <strong>${formatNaira(w.amount)}</strong> - ${w.bank_name}<br>
-          ${w.account_number} - ${w.account_name}<br>
-          <span style="color:${statusColor}">${w.status}</span>
-          ${w.status === "PENDING" ? `<button onclick="approveWithdrawal('${w.reference}')" class="primaryBtn">Mark Paid</button>` : ""}
-        </div>`;
-      });
+    if (!list) return;
+    
+    list.innerHTML = "";
+    
+    if (!wds.length) {
+      list.innerHTML = `<p style="text-align:center;color:#888">No withdrawal requests yet</p>`;
+      return;
     }
-  } catch {}
+    
+    wds.forEach(w => {
+      const statusColor = w.status === "PAID"? "#00c853" : w.status === "PENDING"? "#ffa000" : "#ff4d4d";
+      const transferInfo = w.transfer_code? `<br><small>Transfer ID: ${w.transfer_code}</small>` : '';
+      const dateStr = new Date(w.created_at).toLocaleString('en-NG', {
+        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+      });
+      
+      const approveBtn = w.status === "PENDING" 
+        ? `<button onclick="approveWithdrawal('${w.reference}')" class="successBtn" style="margin-top:8px">Approve & Send to Bank</button>` 
+        : '';
+      
+      list.innerHTML += `<div class="withdrawCard">
+        <div style="display:flex;justify-content:space-between;align-items:start">
+          <div>
+            <strong style="font-size:18px">${formatNaira(w.amount)}</strong><br>
+            ${w.bank_name}<br>
+            ${w.account_number} - ${w.account_name}<br>
+            <span style="color:${statusColor};font-weight:600">${w.status}</span>
+            ${transferInfo}<br>
+            <small style="color:#888">${dateStr}</small><br>
+            <small>Ref: ${w.reference}</small>
+          </div>
+        </div>
+        ${approveBtn}
+      </div>`;
+    });
+  } catch (err) {
+    console.log("Load withdrawals error:", err);
+    showMsg("Failed to load withdrawals", "error");
+  }
 }
 
 async function requestWithdrawal() {
-  const amount = el("withdrawAmount").value;
-  const bank_name = el("withdrawBank").value;
-  const account_number = el("withdrawAccountNumber").value;
-  const account_name = el("withdrawAccountName").value;
-  
+  const amount = el("withdrawAmount")?.value;
+  const bank_name = el("withdrawBank")?.value;
+  const account_number = el("withdrawAccountNumber")?.value;
+  const account_name = el("withdrawAccountName")?.value;
+
   if (!amount ||!bank_name ||!account_number ||!account_name) {
     return showMsg("Fill all fields", "error");
   }
 
-  showLoader("Creating request...");
+  if (Number(amount) < 100) {
+    return showMsg("Minimum withdrawal is ₦100", "error");
+  }
+
+  if (account_number.length !== 10) {
+    return showMsg("Account number must be 10 digits", "error");
+  }
+
+  showLoader("Creating withdrawal request...");
   try {
     const res = await fetch(API + "/admin/withdraw-request", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
-      body: JSON.stringify({ amount, bank_name, account_number, account_name })
+      body: JSON.stringify({ 
+        amount: Number(amount), 
+        bank_name, 
+        account_number, 
+        account_name 
+      })
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok ? "success" : "error");
+    showMsg(data.message, res.ok? "success" : "error");
     if (res.ok) {
+      // Clear form
+      el("withdrawAmount").value = '';
+      el("withdrawBank").value = '';
+      el("withdrawAccountNumber").value = '';
+      el("withdrawAccountName").value = '';
       loadWithdrawals();
-      loadDashboard(); // refresh admin_wallet
+      loadDashboard();
     }
-  } catch {
+  } catch (err) {
     hideLoader();
-    showMsg("Server error", "error");
+    console.log("Request withdrawal error:", err);
+    showMsg("Network error. Check connection", "error");
   }
 }
 
 async function approveWithdrawal(reference) {
-  showLoader("Approving...");
+  if (!confirm("Send money to bank via Paystack? This cannot be reversed.")) return;
+  
+  showLoader("Sending money to bank via Paystack...");
   try {
     const res = await fetch(API + "/admin/withdraw/approve", {
       method: "POST",
@@ -683,14 +756,15 @@ async function approveWithdrawal(reference) {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok ? "success" : "error");
+    showMsg(data.message, res.ok? "success" : "error");
     if (res.ok) {
       loadWithdrawals();
-      loadDashboard();
+      loadDashboard(); // Updates admin_wallet balance
     }
-  } catch {
+  } catch (err) {
     hideLoader();
-    showMsg("Server error", "error");
+    console.log("Approve withdrawal error:", err);
+    showMsg("Network error during transfer", "error");
   }
 }
 
