@@ -631,16 +631,19 @@ const NIGERIAN_BANKS = [
   "VFD Microfinance", "Carbon", "Rubies MFB", "Sparkle"
 ];
 
-// Load bank dropdown on page init
-function populateBankDropdown() {
-  const bankSelect = el("withdrawBank");
-  if (!bankSelect) return;
-  
-  bankSelect.innerHTML = '<option value="">Select Bank</option>';
-  NIGERIAN_BANKS.forEach(bank => {
-    bankSelect.innerHTML += `<option value="${bank}">${bank}</option>`;
-  });
+function showSection(id) {
+  document.querySelectorAll(".section").forEach(s => s.style.display = "none");
+  el(id).style.display = "block";
+  if (id === "profitDashboard") loadProfitDashboard();
+  if (id === "topUsersManager") loadTopUsers();
+  if (id === "withdrawals") {
+    populateBankDropdown(); // This fills the banks
+    loadWithdrawals();
+  }
+  if (id === "plansManager") loadAdminPlans();
+  if (id === "usersManager") loadAdminUsers();
 }
+
 
 // Call this when dashboard loads
 // Add populateBankDropdown() inside your showDashboard() function
