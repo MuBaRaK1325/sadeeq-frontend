@@ -3,24 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SADEEQ VTU Dashboard</title>
+<title>SADEEQ Dashboard</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#00A88F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="SADEEQ">
 
 <style>
 :root{
---primary:#17b65f;
---bg:#051009;
---card:#0b2a17;
---accent:#13d178;
+--primary:#00A88F;
+--bg:#050710;
+--card:#0b102a;
+--accent:#26D0A3;
 --success:#00c853;
 --danger:#ff4d4d;
 --warning:#ffa000;
+--border:#1a1f3a;
+--text:#ffffff;
+--card-bg:#0b102a;
 }
 
 body{
 margin:0;
 background:var(--bg);
-color:white;
-font-family:Arial;
+color:var(--text);
+font-family:Arial, sans-serif;
 padding-bottom:120px;
 }
 
@@ -31,6 +41,7 @@ justify-content:space-between;
 align-items:center;
 padding:15px;
 background:var(--card);
+border-bottom:1px solid var(--border);
 }
 
 .logoContainer{
@@ -62,6 +73,7 @@ padding:20px;
 border-radius:16px;
 text-align:center;
 background:linear-gradient(135deg,var(--primary),var(--accent));
+box-shadow:0 4px 20px rgba(0,168,143,0.3);
 }
 
 .adminWalletCard{
@@ -69,7 +81,7 @@ margin:20px;
 padding:15px;
 border-radius:12px;
 text-align:center;
-background:linear-gradient(135deg,#0f351e,#1a7e4f);
+background:linear-gradient(135deg,#0f1735,#1a237e);
 border:1px solid var(--primary);
 }
 
@@ -88,8 +100,9 @@ border-radius:12px;
 text-align:center;
 cursor:pointer;
 transition:0.2s;
+border:1px solid var(--border);
 }
-.quickCard:hover{transform:scale(1.03);}
+.quickCard:hover{transform:scale(1.03);border-color:var(--primary);}
 
 /* SECTION */
 .section{display:none;padding:20px;}
@@ -100,11 +113,13 @@ width:100%;
 padding:12px;
 margin-top:10px;
 border-radius:8px;
-border:none;
-background:#1a3a2b;
-color:white;
+border:1px solid var(--border);
+background:#1a1f3a;
+color:var(--text);
 box-sizing:border-box;
+outline:none;
 }
+input:focus,select:focus{border-color:var(--primary);}
 
 label{
 display:block;
@@ -124,7 +139,9 @@ margin-top:10px;
 width:100%;
 cursor:pointer;
 font-weight:bold;
+transition:0.2s;
 }
+button:hover{opacity:0.9;}
 .primaryBtn{background:var(--primary);}
 .dangerBtn{background:var(--danger);}
 .successBtn{background:var(--success);}
@@ -174,8 +191,9 @@ margin-top:10px;
 cursor:pointer;
 position:relative;
 transition:0.2s;
+border:1px solid var(--border);
 }
-.planItem:hover{background:#113a29;}
+.planItem:hover{background:#11183a;border-color:var(--primary);}
 
 .topUserBadge{
 position:absolute;
@@ -187,19 +205,18 @@ border-radius:4px;
 font-size:10px;
 }
 
-/* TRANSACTION */
-.transactionCard{
+/* CARDS */
+.transactionCard, .userCard, .withdrawCard, .planCard{
 background:var(--card);
-padding:12px;
-border-radius:10px;
+padding:15px;
+border-radius:12px;
 margin-top:10px;
+border:1px solid var(--border);
+transition:all 0.2s;
 }
-
-.userCard, .withdrawCard, .planCard{
-background:var(--card);
-padding:12px;
-border-radius:10px;
-margin-top:10px;
+.transactionCard:hover, .userCard:hover, .withdrawCard:hover, .planCard:hover{
+border-color:var(--primary);
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
 
 /* TABLE */
@@ -210,13 +227,14 @@ margin-top:15px;
 background:var(--card);
 border-radius:8px;
 overflow:hidden;
+border:1px solid var(--border);
 }
 th,td{
 padding:10px;
 text-align:left;
-border-bottom:1px solid #1a3a28;
+border-bottom:1px solid var(--border);
 }
-th{background:#113a29;}
+th{background:#11183a;}
 
 /* NAV */
 .bottomNav{
@@ -227,14 +245,16 @@ background:var(--card);
 display:flex;
 justify-content:space-around;
 padding:8px 0;
-border-top:1px solid #1a3a27;
+border-top:1px solid var(--border);
+z-index:999;
 }
 
 .bottomNav button{
 background:none;
-color:white;
+color:var(--text);
 padding:8px;
 font-size:12px;
+border:none;
 }
 
 /* MODAL */
@@ -246,23 +266,60 @@ display:none;
 align-items:center;
 justify-content:center;
 z-index:1000;
+padding:20px;
+box-sizing:border-box;
 }
 
 .modalBox{
 background:var(--card);
 padding:20px;
 border-radius:12px;
-width:85%;
+width:100%;
 max-width:400px;
 max-height:80vh;
 overflow-y:auto;
 text-align:center;
+border:1px solid var(--border);
+}
+
+/* RECEIPT MODAL */
+.receiptBox{
+background:white;
+color:#000;
+padding:25px;
+border-radius:12px;
+width:100%;
+max-width:380px;
+text-align:left;
+font-family:'Courier New', monospace;
+}
+.receiptHeader{
+text-align:center;
+border-bottom:2px dashed #ccc;
+padding-bottom:15px;
+margin-bottom:15px;
+}
+.receiptRow{
+display:flex;
+justify-content:space-between;
+margin:8px 0;
+font-size:14px;
+}
+.receiptDivider{
+border-top:1px dashed #ccc;
+margin:15px 0;
+}
+.receiptTotal{
+font-weight:bold;
+font-size:16px;
+border-top:2px solid #000;
+padding-top:10px;
 }
 
 /* ADMIN */
 .adminOnly{
 display:none;
-background:#0f3520;
+background:#0f1735;
 padding:15px;
 border-radius:10px;
 margin-top:20px;
@@ -270,21 +327,25 @@ border:1px solid var(--primary);
 }
 
 .adminSection{
-background:#0f3520;
+background:#0f1735;
 padding:15px;
 border-radius:10px;
 margin-top:15px;
+border:1px solid var(--border);
 }
 
+/* BADGES */
 .badge{
+display:inline-block;
 padding:3px 8px;
 border-radius:4px;
 font-size:11px;
 font-weight:bold;
+margin-left:6px;
 }
-.badgeSuccess{background:var(--success);}
-.badgeDanger{background:var(--danger);}
-.badgeWarning{background:var(--warning);}
+.badgeSuccess{background:rgba(0, 200, 83, 0.15);color:var(--success);border:1px solid var(--success);}
+.badgeDanger{background:rgba(255, 77, 77, 0.15);color:var(--danger);border:1px solid var(--danger);}
+.badgeWarning{background:rgba(255, 160, 0, 0.15);color:var(--warning);border:1px solid var(--warning);}
 
 /* FOOTER */
 .footer{
@@ -293,18 +354,22 @@ font-size:14px;
 margin-top:30px;
 opacity:0.9;
 }
-
 .footer a{
-color:#3cff94;
+color:var(--primary);
 text-decoration:none;
 display:block;
 margin-top:8px;
+}
+.backBtn{
+background:var(--card);
+border:1px solid var(--border);
+margin-bottom:15px;
 }
 </style>
 </head>
 
 <body>
-<!-- ADD PLAN MODAL - UPDATED -->
+<!-- ADD PLAN MODAL -->
 <div id="addPlanModal" class="modal">
 <div class="modalBox">
   <h3>Add New Plan</h3>
@@ -337,7 +402,7 @@ margin-top:8px;
 </div>
 </div>
 
-<!-- EDIT PLAN MODAL - UPDATED -->
+<!-- EDIT PLAN MODAL -->
 <div id="editPlanModal" class="modal">
 <div class="modalBox">
   <h3>Edit Plan</h3>
@@ -372,25 +437,24 @@ margin-top:8px;
 
 <header>
 <div class="logoContainer">
-  <img src="images/SADEEQ.PNG" alt="Company Logo" id="companyLogo">
-  <span class="companyBadge" id="companyBadge">LOADING</span>
+  <img src="/icons/icon-192x192.png" alt="Sadeeq Logo" id="companyLogo">
+  <span class="companyBadge" id="companyBadge">SADEEQ</span>
 </div>
-<div onclick="showSection('profile')">👤</div>
+<div onclick="showSection('profile')" style="cursor:pointer;font-size:24px">👤</div>
 </header>
 
 <!-- HOME -->
 <section id="home" class="section active">
-
 <h3 id="usernameDisplay"></h3>
 
 <div class="walletCard">
 <p>Wallet Balance</p>
-<strong id="walletBalance">₦0</strong>
+<strong id="walletBalance" style="font-size:28px">₦0</strong>
 </div>
 
 <div class="adminWalletCard adminOnly">
 <p>Admin Profit Wallet</p>
-<strong id="adminWalletBalance">₦0</strong>
+<strong id="adminWalletBalance" style="font-size:22px">₦0</strong>
 </div>
 
 <div class="quickActions">
@@ -401,66 +465,67 @@ margin-top:8px;
 </div>
 
 <div id="transactionHistory"></div>
-
 </section>
 
 <!-- FUND -->
 <section id="fund" class="section">
+<button onclick="showSection('home')" class="backBtn">⬅ Back</button>
 <h3>Fund Wallet</h3>
 
 <div class="walletCard">
 <p id="bankName">Bank Name</p>
-<strong id="accountNumber">0000000000</strong>
+<strong id="accountNumber" style="font-size:20px;font-family:monospace">0000</strong>
 <p id="accountName">Account Name</p>
 <button onclick="copyAccount()">Copy Account Number</button>
 <button id="generateAccountBtn" onclick="generateAccount()" class="warningBtn" style="display:none">Generate Account Number</button>
 </div>
 
-<button onclick="openFundModal()">💳 Fund via Paystack</button>
-<button onclick="showSection('home')">⬅ Back</button>
+<button onclick="openFundModal()">💳 Fund Wallet</button>
 </section>
 
 <!-- DATA -->
 <section id="data" class="section">
-<button onclick="showSection('home')">⬅ Back</button>
+<button onclick="showSection('home')" class="backBtn">⬅ Back</button>
 <h3>Select Network</h3>
 
 <div class="networkGrid">
 <div class="networkItem" onclick="selectNetwork('mtn', this)"><img src="images/mtn.png" alt="MTN"></div>
 <div class="networkItem" onclick="selectNetwork('glo', this)"><img src="images/glo.png" alt="GLO"></div>
 <div class="networkItem" onclick="selectNetwork('airtel', this)"><img src="images/airtel.png" alt="AIRTEL"></div>
+<div class="networkItem" onclick="selectNetwork('9mobile', this)"><img src="images/9mobile.png" alt="9MOBILE"></div>
 </div>
 
-<input id="dataPhone" type="tel" placeholder="Phone Number">
+<input id="dataPhone" type="tel" placeholder="Phone Number" maxlength="11">
 <div id="planList"></div>
 </section>
 
 <!-- AIRTIME -->
 <section id="airtime" class="section">
-<button onclick="showSection('home')">⬅ Back</button>
+<button onclick="showSection('home')" class="backBtn">⬅ Back</button>
 <h3>Select Network</h3>
 
 <div class="networkGrid">
 <div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('mtn', this)"><img src="images/mtn.png" alt="MTN"></div>
 <div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('glo', this)"><img src="images/glo.png" alt="GLO"></div>
 <div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('airtel', this)"><img src="images/airtel.png" alt="AIRTEL"></div>
+<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('9mobile', this)"><img src="images/9mobile.png" alt="9MOBILE"></div>
 </div>
 
-<input id="airtimePhone" type="tel" placeholder="Phone Number">
+<input id="airtimePhone" type="tel" placeholder="Phone Number" maxlength="11">
 <input id="airtimeAmount" type="number" placeholder="Amount">
 <button onclick="openAirtimePin()">Buy Airtime</button>
 </section>
 
 <!-- TRANSACTIONS -->
 <section id="transactions" class="section">
-<button onclick="showSection('home')">⬅ Back</button>
+<button onclick="showSection('home')" class="backBtn">⬅ Back</button>
 <h3>All Transactions</h3>
 <div id="allTransactions"></div>
 </section>
 
 <!-- ADMIN: PROFIT DASHBOARD -->
 <section id="profitDashboard" class="section adminOnly">
-<button onclick="showSection('home')">⬅ Back</button>
+<button onclick="showSection('home')" class="backBtn">⬅ Back</button>
 <h3>📊 Profit Dashboard</h3>
 
 <div class="adminSection">
@@ -476,9 +541,44 @@ margin-top:8px;
 </div>
 </section>
 
+<!-- ADMIN: TRANSACTIONS MANAGER -->
+<section id="transactionsManager" class="section adminOnly">
+<button onclick="showSection('profile')" class="backBtn">⬅ Back</button>
+<h3>🧾 Transaction Manager</h3>
+<p style="opacity:0.7;margin-bottom:15px">Handle failed transactions and process manual deductions or refunds</p>
+
+<div class="adminSection">
+  <div class="filtersRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
+    <select id="txStatusFilter" onchange="loadAdminTransactions()">
+      <option value="">All Status</option>
+      <option value="SUCCESS">Success</option>
+      <option value="FAILED">Failed</option>
+      <option value="PENDING">Pending</option>
+      <option value="REVERSED">Reversed</option>
+    </select>
+
+    <select id="txProviderFilter" onchange="loadAdminTransactions()">
+      <option value="">All Providers</option>
+      <option value="maitama">Maitama</option>
+      <option value="cheapdatahub">CheapDataHub</option>
+      <option value="subpadi">SubPadi</option>
+      <option value="monnify">Monnify</option>
+      <option value="flutterwave">Flutterwave</option>
+    </select>
+
+    <input id="txSearch" type="text" placeholder="Search reference or email" onkeyup="loadAdminTransactions()" style="flex:1;min-width:200px;">
+    <button onclick="loadAdminTransactions()" class="primaryBtn">Refresh</button>
+  </div>
+
+  <div id="transactionsList" class="transactionsGrid" style="display:flex;flex-direction:column;gap:12px">
+    <p style="text-align:center;opacity:0.6">Loading transactions...</p>
+  </div>
+</div>
+</section>
+
 <!-- ADMIN: TOP USERS MANAGER -->
 <section id="topUsersManager" class="section adminOnly">
-<button onclick="showSection('profile')">⬅ Back</button>
+<button onclick="showSection('profile')" class="backBtn">⬅ Back</button>
 <h3>🔥 Top Users Manager</h3>
 
 <div class="adminSection">
@@ -488,9 +588,20 @@ margin-top:8px;
 </div>
 </section>
 
+<!-- ADMIN: USERS MANAGER -->
+<section id="usersManager" class="section adminOnly">
+<button onclick="showSection('profile')" class="backBtn">⬅ Back</button>
+<h3>👥 Users Manager</h3>
+
+<div class="adminSection">
+  <input id="userSearch" placeholder="Search username or email" oninput="loadAdminUsers()">
+  <div id="adminUsersList"></div>
+</div>
+</section>
+
 <!-- ADMIN: PLANS MANAGER -->
 <section id="plansManager" class="section adminOnly">
-<button onclick="showSection('profile')">⬅ Back</button>
+<button onclick="showSection('profile')" class="backBtn">⬅ Back</button>
 <h3>📱 Plans Manager</h3>
 
 <div class="adminSection">
@@ -503,42 +614,36 @@ margin-top:8px;
 </div>
 </section>
 
-<!-- ADMIN: USERS MANAGER -->
-<section id="usersManager" class="section adminOnly">
-<button onclick="showSection('profile')">⬅ Back</button>
-<h3>👥 Users Manager</h3>
-
-<div class="adminSection">
-  <input id="userSearch" placeholder="Search username or email" oninput="loadAdminUsers()">
-  <div id="adminUsersList"></div>
-</div>
-</section>
-
 <!-- ADMIN: WITHDRAWALS -->
 <section id="withdrawals" class="section adminOnly">
-<button onclick="showSection('profile')">⬅ Back</button>
-<h3>💸 Admin Withdrawals</h3>
+  <button onclick="showSection('profile')" class="backBtn">⬅ Back</button>
+  <h3>💸 Admin Withdrawals</h3>
 
-<div class="adminSection">
-  <input id="withdrawAmount" type="number" placeholder="Amount">
-  <input id="withdrawBank" placeholder="Bank Name">
-  <input id="withdrawAccountNumber" placeholder="Account Number">
-  <input id="withdrawAccountName" placeholder="Account Name">
-  <button onclick="requestWithdrawal()" class="primaryBtn">Request Withdrawal</button>
-</div>
+  <div class="adminSection">
+    <h4>Withdraw Admin Profit</h4>
+    <label>Amount</label>
+    <input id="withdrawAmount" type="number" placeholder="Amount (Min ₦100)" min="100">
+    <label>Bank</label>
+    <select id="withdrawBank"><option value="">Select Bank</option></select>
+    <label>Account Number</label>
+    <input id="withdrawAccountNumber" type="text" placeholder="10-digit account number" maxlength="10" pattern="[0-9]*" inputmode="numeric">
+    <label>Account Name</label>
+    <input id="withdrawAccountName" type="text" placeholder="Account name as shown on bank">
+    <button onclick="requestWithdrawal()" class="primaryBtn">Request Withdrawal</button>
+  </div>
 
-<div class="adminSection">
-  <h4>Withdrawal History</h4>
-  <div id="withdrawalsList"></div>
-</div>
+  <div class="adminSection">
+    <h4>Withdrawal History</h4>
+    <div id="withdrawalsList"></div>
+  </div>
 </section>
 
 <!-- PROFILE -->
 <section id="profile" class="section">
-<button onclick="showSection('home')">⬅ Back</button>
+<button onclick="showSection('home')" class="backBtn">⬅ Back</button>
 <button onclick="openModal('passwordModal')">Change Password</button>
 <button onclick="openModal('pinModalBox')">Change PIN</button>
-<button onclick="logout()">Logout</button>
+<button onclick="logout()" class="dangerBtn">Logout</button>
 
 <!-- ADMIN PANEL -->
 <div class="adminOnly">
@@ -547,70 +652,161 @@ margin-top:8px;
 <button onclick="showSection('plansManager')">📱 Plans Manager</button>
 <button onclick="showSection('usersManager')">👥 Users Manager</button>
 <button onclick="showSection('topUsersManager')">🔥 Top Users Manager</button>
+<button onclick="showSection('transactionsManager')">🧾 Transactions Manager</button>
 <button onclick="showSection('withdrawals')">💸 Withdrawals</button>
-
-<hr>
-
-<h3>Transaction Reversal</h3>
-<input id="reverseRef" placeholder="Transaction Reference">
-<button onclick="reverseTransaction()" class="dangerBtn">Reverse Transaction</button>
 </div>
 
 <div class="footer">
 <p>Need Help?</p>
 <a href="https://wa.me/2348131375356" target="_blank">📞 Support (08131375356)</a>
 <a href="https://wa.me/2348117988561" target="_blank">👨‍💻 Developer (08117988561)</a>
-<p>© SADEEQ DATA HUB  NIG LTD</p>
+<p>© SADEEQ DATA HUB NIG LTD</p>
+<p> DEVELOPED BYMAYCONNECT TECHNOLOGIES NIG LTD</p>
 </div>
-
 </section>
 
-<!-- PIN MODAL -->
-<div id="pinModal" class="modal">
-<div class="modalBox">
-<input id="pinInput" type="password" maxlength="4" placeholder="Enter PIN">
-<button onclick="confirmPurchase()">Confirm</button>
-<button onclick="closeModal('pinModal')">Cancel</button>
-</div>
+<!-- PURCHASE MODAL - PIN OR BIOMETRIC -->
+<div id="purchaseModal" class="modal">
+  <div class="modalBox">
+    <h3>Confirm Purchase</h3>
+    <p id="purchaseDetails"></p>
+    <input type="password" id="purchasePin" placeholder="Enter PIN" maxlength="4">
+    <div style="display:flex;gap:10px;margin-top:15px;">
+      <button onclick="purchaseWithPin()" class="primaryBtn">Pay with PIN</button>
+      <button id="biometricPurchaseBtn" onclick="purchaseWithBiometric()" style="display:none;" class="successBtn">🫆 Fingerprint</button>
+    </div>
+    <button onclick="closeModal('purchaseModal')" class="dangerBtn" style="margin-top:10px;">Cancel</button>
+  </div>
 </div>
 
 <!-- PASSWORD -->
 <div id="passwordModal" class="modal">
 <div class="modalBox">
+<h3>Change Password</h3>
 <input id="oldPassword" type="password" placeholder="Old Password">
 <input id="newPassword" type="password" placeholder="New Password">
-<button onclick="submitPassword()">Update</button>
-<button onclick="closeModal('passwordModal')">Cancel</button>
+<button onclick="submitPassword()" class="successBtn">Update</button>
+<button onclick="closeModal('passwordModal')" class="dangerBtn">Cancel</button>
 </div>
 </div>
 
 <!-- PIN CHANGE -->
 <div id="pinModalBox" class="modal">
 <div class="modalBox">
+<h3>Change PIN</h3>
 <input id="oldPin" type="password" maxlength="4" placeholder="Old PIN">
 <input id="newPin" type="password" maxlength="4" placeholder="New PIN">
-<button onclick="submitPin()">Update</button>
-<button onclick="closeModal('pinModalBox')">Cancel</button>
+<button onclick="submitPin()" class="successBtn">Update</button>
+<button onclick="closeModal('pinModalBox')" class="dangerBtn">Cancel</button>
 </div>
 </div>
 
-<!-- MESSAGE -->
+<!-- MESSAGE MODAL -->
 <div id="msgModal" class="modal">
 <div class="modalBox" id="msgBox"></div>
 </div>
 
+<!-- RECEIPT MODAL -->
+<div id="receiptModal" class="modal">
+<div class="receiptBox" id="receiptBox"></div>
+</div>
+
 <!-- NAV -->
 <div class="bottomNav">
-<button onclick="showSection('home')">Home</button>
-<button onclick="showSection('data')">Data</button>
-<button onclick="showSection('transactions')">History</button>
-<button onclick="showSection('profile')">Profile</button>
+<button onclick="showSection('home')">🏠 Home</button>
+<button onclick="showSection('data')">📶 Data</button>
+<button onclick="showSection('transactions')">📜 History</button>
+<button onclick="showSection('profile')">👤 Profile</button>
 </div>
+
 <script>
+// Register Service Worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/service-worker.js');
 }
+
+// Modal helpers
+function openModal(id){document.getElementById(id).style.display='flex';}
+function closeModal(id){document.getElementById(id).style.display='none';}
+function el(id){return document.getElementById(id);}
+function formatNaira(amount){return new Intl.NumberFormat('en-NG').format(amount);}
+
+// Section switcher
+function showSection(sectionId){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(sectionId).classList.add('active');
+}
+
+// Receipt Generator
+function showReceipt(data) {
+  const date = new Date().toLocaleString('en-NG', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  el("receiptBox").innerHTML = `
+    <div class="receiptHeader">
+      <h2 style="margin:0;color:#00A88F">SADEEQ DATA HUB</h2>
+      <small>Transaction Receipt</small>
+    </div>
+
+    <div class="receiptRow">
+      <span>Status:</span>
+      <span style="color:#00c853;font-weight:bold">${data.status || 'SUCCESS'}</span>
+    </div>
+    <div class="receiptRow">
+      <span>Type:</span>
+      <span>${data.type || 'DATA PURCHASE'}</span>
+    </div>
+    <div class="receiptRow">
+      <span>Network:</span>
+      <span>${data.network || '-'}</span>
+    </div>
+    <div class="receiptRow">
+      <span>Phone:</span>
+      <span>${data.phone || '-'}</span>
+    </div>
+    <div class="receiptRow">
+      <span>Plan:</span>
+      <span>${data.plan || '-'}</span>
+    </div>
+    <div class="receiptRow">
+      <span>Reference:</span>
+      <span style="font-size:12px">${data.reference || '-'}</span>
+    </div>
+    <div class="receiptRow">
+      <span>Date:</span>
+      <span>${date}</span>
+    </div>
+
+    <div class="receiptDivider"></div>
+
+    <div class="receiptRow receiptTotal">
+      <span>Amount Paid:</span>
+      <span>₦${formatNaira(data.amount || 0)}</span>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="printReceipt()" class="primaryBtn" style="flex:1">🖨 Print</button>
+      <button onclick="closeModal('receiptModal')" class="dangerBtn" style="flex:1">Close</button>
+    </div>
+  `;
+  openModal("receiptModal");
+}
+
+function printReceipt() {
+  const printContent = el("receiptBox").innerHTML;
+  const printWindow = window.open('', '', 'height=600,width=400');
+  printWindow.document.write('<html><head><title>Sadeeq Receipt</title>');
+  printWindow.document.write('<style>body{font-family:Courier New;padding:20px;}</style>');
+  printWindow.document.write('</head><body >');
+  printWindow.document.write(printContent);
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  printWindow.print();
+}
 </script>
+
 <script src="app.js"></script>
 </body>
 </html>
