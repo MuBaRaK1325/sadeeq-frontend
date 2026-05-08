@@ -1,212 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>SADEEQ DATA HUB - Login</title>
-
-<style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial;
-}
-
-body{
-background:#0a1a03;
-color:white;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-flex-direction:column;
-}
-
-/* LOADER */
-#loginLoader{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#0a1a03;
-display:none;
-align-items:center;
-justify-content:center;
-z-index:9999;
-flex-direction:column;
-}
-
-.loaderRing{
-width:70px;
-height:70px;
-border:6px solid #0d2c05;
-border-top:6px solid rgb(72, 255, 0);
-border-radius:50%;
-animation:spin 1s linear infinite;
-}
-
-@keyframes spin{
-0%{transform:rotate(0deg)}
-100%{transform:rotate(360deg)}
-}
-
-/* LOGO */
-.logo{
-width:110px;
-height:110px;
-border-radius:50%;
-border:4px solid rgb(72, 255, 0);
-padding:8px;
-margin-bottom:40px;
-box-shadow:0 0 20px rgb(72, 255, 0);
-}
-
-/* CARD */
-.card{
-background:#052c07;
-padding:30px;
-border-radius:20px;
-width:90%;
-max-width:380px;
-box-shadow:0 0 30px rgba(72, 255, 0, 0.2);
-}
-
-.title{
-text-align:center;
-font-size:26px;
-margin-bottom:25px;
-}
-
-/* INPUT */
-.inputBox{
-margin-bottom:18px;
-position:relative;
-}
-
-input{
-width:100%;
-padding:14px;
-border-radius:12px;
-border:none;
-background:#020d02;
-color:white;
-font-size:16px;
-outline:none;
-}
-
-/* SHOW BUTTON */
-.showBtn{
-position:absolute;
-right:12px;
-top:50%;
-transform:translateY(-50%);
-background:none;
-border:none;
-color:rgb(72, 255, 0);
-cursor:pointer;
-}
-
-/* BUTTON */
-.loginBtn{
-width:100%;
-padding:14px;
-border:none;
-border-radius:12px;
-background:rgb(72, 255, 0);
-color:black;
-font-size:17px;
-margin-top:10px;
-cursor:pointer;
-}
-
-.loginBtn:disabled{
-opacity:0.6;
-}
-
-/* BIOMETRIC */
-.biometric{
-margin-top:16px;
-border:2px dashed rgb(72, 255, 0);
-padding:16px;
-border-radius:12px;
-text-align:center;
-cursor:pointer;
-}
-
-/* SIGNUP */
-.signup{
-margin-top:15px;
-border:2px solid rgb(72, 255, 0);
-padding:14px;
-border-radius:12px;
-text-align:center;
-}
-
-a{
-color:white;
-text-decoration:none;
-display:block;
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SADEEQ VTU - Login</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#16a34a">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a1f14, #1a3a28);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+  .container { max-width: 28rem; width: 100%; text-align: center; }
+  .glass-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+  .logo {
+      width: 96px;
+      height: 96px;
+      border-radius: 24px;
+      margin: 0 auto 24px;
+      box-shadow: 0 8px 32px rgba(22, 163, 74, 0.4);
+      object-fit: cover;
+      border: 2px solid #16a34a;
+    }
+  .h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+  .tagline {
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+  .input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+      margin-bottom: 12px;
+    }
+  .input::placeholder { color: rgba(255, 255, 255, 0.7); }
+  .input:focus {
+      outline: none;
+      border-color: #16a34a;
+      background: rgba(255, 255, 255, 0.15);
+    }
+  .btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 12px;
+    }
+  .btn-primary {
+      background: white;
+      color: #16a34a;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+  .btn-ghost {
+      background: transparent;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+  .showBtn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #16a34a;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+  </style>
 </head>
-
 <body>
+  <div id="loginLoader" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:9999;flex-direction:column;">
+    <div style="width:70px;height:70px;border:6px solid #1a3a28;border-top:6px solid #16a34a;border-radius:50%;animation:spin 1s linear infinite;"></div>
+    <p style="margin-top:15px">Logging in...</p>
+  </div>
 
-<div id="loginLoader">
-<div class="loaderRing"></div>
-<p style="margin-top:15px">Logging in...</p>
-</div>
+  <div class="container">
+    <div class="glass-card">
+      <img src="images/SADEEQ.PNG" class="logo" alt="Sadeeq Logo">
+      <h1 class="h1">Welcome Back</h1>
+      <p class="tagline">Cheap, Affordable, Fast</p>
 
-<img src="images/SADEEQ.PNG" class="logo">
+      <input id="loginUsername" class="input" placeholder="Username or Email">
 
-<div class="card">
+      <div style="position:relative;">
+        <input id="loginPassword" type="password" class="input" placeholder="Password">
+        <button class="showBtn" onclick="togglePassword()">Show</button>
+      </div>
 
-<div class="title">Welcome Back</div>
-
-<div class="inputBox">
-<input id="loginUsername" placeholder="Username">
-</div>
-
-<div class="inputBox">
-<input id="loginPassword" type="password" placeholder="Password">
-<button class="showBtn" onclick="togglePassword()">Show</button>
-</div>
-
-<button id="loginBtn" class="loginBtn">Login</button>
-
-<div class="biometric" onclick="biometricLogin()">
-🔐 Login with Fingerprint / Face ID
-</div>
-
-<a href="signup.html">
-<div class="signup">Create Account</div>
-</a>
-
-</div>
-
-<script src="login.js"></script>
+      <button id="loginBtn" class="btn btn-primary">Login</button>
+      <button onclick="biometricLogin()" class="btn btn-ghost">🔐 Login with Fingerprint / Face ID</button>
+      <a href="signup.html" class="btn btn-secondary">Create Account</a>
+    </div>
+  </div>
 
 <script>
-function togglePassword(){
-const input=document.getElementById("loginPassword")
-const btn=document.querySelector(".showBtn")
+const API = "https://mayconnect-backend-1.onrender.com";
+const usernameInput = document.getElementById("loginUsername");
+const passwordInput = document.getElementById("loginPassword");
+const loginBtn = document.getElementById("loginBtn");
+const loader = document.getElementById("loginLoader");
+const welcomeSound = new Audio("sounds/welcome.mp3");
 
-if(input.type==="password"){
-input.type="text"
-btn.innerText="Hide"
-}else{
-input.type="password"
-btn.innerText="Show"
+if (localStorage.getItem("token")) window.location.href = "dashboard.html";
+
+function togglePassword(){
+  passwordInput.type = passwordInput.type === "password"? "text" : "password";
+  document.querySelector(".showBtn").innerText = passwordInput.type === "password"? "Show" : "Hide";
 }
+
+loginBtn.addEventListener("click", login);
+
+async function login(){
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value.trim();
+  if(!username ||!password) return alert("Enter username and password");
+  loginBtn.disabled = true;
+  loader.style.display = "flex";
+  try{
+    const res = await fetch(API + "/api/login",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.message || "Login failed");
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("username", data.username);
+    if(data.is_admin) alert("Welcome Admin");
+    welcomeSound.play().catch(()=>{});
+    setTimeout(()=>{ window.location.href = "dashboard.html"; },600);
+  }catch(err){
+    alert(err.message || "Server error");
+    loader.style.display = "none";
+    loginBtn.disabled = false;
+  }
+}
+
+async function base64URLToBuffer(base64URL) {
+  const base64 = base64URL.replace(/-/g, '+').replace(/_/g, '/');
+  const padLen = (4 - (base64.length % 4)) % 4;
+  const padded = base64 + '='.repeat(padLen);
+  const binary = atob(padded);
+  const buffer = new ArrayBuffer(binary.length);
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return buffer;
+}
+
+async function bufferToBase64URL(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let str = '';
+  for (const charCode of bytes) str += String.fromCharCode(charCode);
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+async function biometricLogin(){
+  const usernameOrEmail = usernameInput.value.trim();
+  if(!usernameOrEmail) return alert("Enter your username or email first");
+  if(!window.PublicKeyCredential) return alert("Biometric not supported");
+  loader.style.display="flex";
+  try{
+    const startRes = await fetch(API + "/api/auth/webauthn/login-start", {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ email: usernameOrEmail })
+    });
+    if(!startRes.ok) throw new Error("No biometric registered");
+    const options = await startRes.json();
+    options.challenge = await base64URLToBuffer(options.challenge);
+    if(options.allowCredentials){
+      options.allowCredentials = await Promise.all(options.allowCredentials.map(async cred => ({
+     ...cred, id: await base64URLToBuffer(cred.id)
+      })));
+    }
+    const credential = await navigator.credentials.get({ publicKey: options });
+    const finishRes = await fetch(API + "/api/auth/webauthn/login-finish", {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        email: usernameOrEmail,
+        id: credential.id,
+        rawId: await bufferToBase64URL(credential.rawId),
+        response: {
+          authenticatorData: await bufferToBase64URL(credential.response.authenticatorData),
+          clientDataJSON: await bufferToBase64URL(credential.response.clientDataJSON),
+          signature: await bufferToBase64URL(credential.response.signature),
+          userHandle: credential.response.userHandle? await bufferToBase64URL(credential.response.userHandle) : null,
+        },
+        type: credential.type
+      })
+    });
+    if(!finishRes.ok) throw new Error("Authentication failed");
+    const { token, username } = await finishRes.json();
+    localStorage.setItem("token", token);
+    localStorage.setItem("username", username);
+    window.location.href = "dashboard.html";
+  }catch(e){
+    loader.style.display="none";
+    alert('Biometric login failed: ' + e.message);
+  }
 }
 </script>
-
 </body>
 </html>
