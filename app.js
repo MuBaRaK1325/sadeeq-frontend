@@ -166,31 +166,19 @@ async function loadWallet() {
   const wallet = user.wallet || {};
   const dva = wallet.dva || {};
 
-  // --- FIX: RENDER DVA BASED ON COMPANY ---
+  // --- PAYMENTPOINT DVA FOR ALL COMPANIES ---
   const dvaContainer = el("dvaContainer");
   if (dvaContainer) {
-    if (dva.accountNumber && ["mayconnect", "Teeversh", "bnhabeeb"].includes(currentUser.company)) {
-      // Monnify DVA for these 3 companies
+    if (dva.accountNumber) {
       dvaContainer.innerHTML = `
         <div class="walletCard">
-          <h4>Monnify Virtual Account</h4>
+          <h4>PaymentPoint Virtual Account</h4>
           <p><strong>Bank:</strong> ${dva.bankName || 'N/A'}</p>
           <p><strong>Account Number:</strong> ${dva.accountNumber} 
             <button onclick="copyToClipboard('${dva.accountNumber}')" class="smallBtn">Copy</button>
           </p>
           <p><strong>Account Name:</strong> ${dva.accountName || user.username}</p>
-          <small style="opacity:0.7">Transfer to this account to fund your wallet instantly</small>
-        </div>`;
-    } else if (dva.accountNumber && currentUser.company === "sadeeq") {
-      // Flutterwave DVA for Sadeeq
-      dvaContainer.innerHTML = `
-        <div class="walletCard">
-          <h4>Flutterwave Virtual Account</h4>
-          <p><strong>Bank:</strong> ${dva.bankName || 'N/A'}</p>
-          <p><strong>Account Number:</strong> ${dva.accountNumber}
-            <button onclick="copyToClipboard('${dva.accountNumber}')" class="smallBtn">Copy</button>
-          </p>
-          <p><strong>Account Name:</strong> ${dva.accountName || user.username}</p>
+          <small style="opacity:0.7">Transfer to this account to fund your wallet instantly. Use exact amount.</small>
         </div>`;
     } else {
       // No DVA yet - show generate button
@@ -198,69 +186,30 @@ async function loadWallet() {
         <button onclick="generateDVA()" class="primaryBtn">Generate Virtual Account</button>`;
     }
   }
-
-  // --- RENDER TRANSACTIONS ---
-  const list = el("walletTransactionsList");
-  const transactions = wallet.transactions || [];
-  if (list) {
-    if (!transactions.length) {
-      list.innerHTML = `<p style="opacity:0.6;text-align:center;">No wallet transactions yet</p>`;
-      return;
-    }
-    list.innerHTML = "";
-    transactions.forEach(tx => {
-      const statusColor = tx.tx_status === "SUCCESS" ? "#00c853" : tx.tx_status === "PENDING" ? "#ffa000" : "#ff4d4d";
-      const wasManual = tx.metadata?.manual_deducted ? '<span class="badge badgeWarning">MANUAL</span>' : '';
-      const wasReversed = tx.metadata?.reversed ? '<span class="badge badgeDanger">REVERSED</span>' : '';
-
-      list.innerHTML += `
-        <div class="transactionCard">
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-            <div>
-              <strong>${tx.type || 'Wallet Tx'}</strong> ${wasManual} ${wasReversed}<br>
-              <small style="font-family:monospace">${tx.reference || 'N/A'}</small>
-            </div>
-            <div style="text-align:right">
-              <strong style="font-size:18px">${formatNaira(tx.amount || 0)}</strong><br>
-              <span style="color:${statusColor};font-weight:600">${tx.tx_status || tx.type.toUpperCase()}</span>
-            </div>
-          </div>
-          <small style="opacity:0.5">${formatDate(tx.created_at)}</small>
-        </div>`;
-    });
-  }
 }
 
-// New function to generate Monnify/Flutterwave DVA
 async function generateDVA() {
-  showLoader("Creating your dedicated account...");
   try {
-    const endpoint = currentUser.company === "sadeeq" ? "/api/flutterwave/create-dva" : "/api/monnify/create-dva";
-    const res = await fetch(API + endpoint, {
+    const res = await fetch(API + "/api/wallet/create-dva", {
       method: "POST",
       headers: { Authorization: "Bearer " + getToken() }
     });
     const data = await res.json();
-    hideLoader();
-    showMsg(data.message, res.ok ? "success" : "error");
-    if (res.ok) await loadWallet();
-  } catch {
-    hideLoader();
-    showMsg("Server error", "error");
+
+    if (data.success || data.account_number) {
+      showToast("Virtual account created", "success");
+      loadWallet(); // reload to show the account
+    } else {
+      showToast(data.message || data.error || "Failed to create account", "error");
+    }
+  } catch (err) {
+    showToast("Network error", "error");
   }
 }
 
-// Helper for copy button
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text);
-  showMsg("Copied to clipboard!", "success");
-}
-
-/* ================= COPY ACCOUNT ================= */
-function copyAccount() {
-  const acc = el("accountNumber").innerText;
-  navigator.clipboard.writeText(acc);
-  showMsg("Account number copied!", "success");
+  showToast("Copied to clipboard", "success");
 }
 
 /* ================= TRANSACTIONS ================= */
@@ -842,8 +791,8 @@ function openFundModal() {
     <div style="text-align:center">
       <h3>Fund Wallet</h3>
       <input id="fundAmount" type="number" placeholder="Minimum ₦100" style="width:100%;padding:10px;margin:12px 0" min="100" />
-      <p style="font-size:13px;opacity:0.7;margin-bottom:12px">Payment via ${currentUser.company === 'sadeeq'? 'Flutterwave' : 'Monnify Bank Transfer'}</p>
-      <button onclick="confirmFund()" class="primaryBtn">Continue to Payment</button>
+      <p style="font-size:13px;opacity:0.7;margin-bottom:12px">Fund via PaymentPoint Bank Transfer</p>
+      <button onclick="confirmFund()" class="primaryBtn">Generate Account Details</button>
     </div>`;
   openModal("msgModal");
 }
@@ -852,7 +801,7 @@ async function confirmFund() {
   const amount = Number(el("fundAmount")?.value);
   if (!amount || amount < 100) return showMsg("Minimum funding is ₦100", "error");
 
-  showLoader("Initializing payment...");
+  showLoader("Generating account details...");
   try {
     const res = await fetch(API + "/api/fund/init", {
       method: "POST",
@@ -862,14 +811,11 @@ async function confirmFund() {
     const data = await res.json();
     hideLoader();
 
-    if (data.url) {
-      // Flutterwave for Sadeeq
-      window.location.href = data.url;
-    } else if (data.account_number) {
-      // Monnify for Mayconnect/BnHabeeb/Teeversh
-      showMonnifyDetails(data, amount);
+    if (data.account_number) {
+      // PaymentPoint bank transfer for all companies
+      showPaymentPointDetails(data, amount);
     } else {
-      showMsg(data.message || "Payment failed", "error");
+      showMsg(data.message || "Failed to generate account", "error");
     }
   } catch {
     hideLoader();
@@ -877,11 +823,11 @@ async function confirmFund() {
   }
 }
 
-function showMonnifyDetails(data, amount) {
+function showPaymentPointDetails(data, amount) {
   el("msgBox").innerHTML = `
     <div style="text-align:center">
       <h3>Bank Transfer Details</h3>
-      <p style="opacity:0.8;margin-bottom:15px">Transfer ₦${formatNaira(amount)} to the account below. Your wallet will be credited automatically.</p>
+      <p style="opacity:0.8;margin-bottom:15px">Transfer ₦${formatNaira(amount)} to the account below. Your wallet will be credited automatically within 1-2 minutes.</p>
 
       <div style="background:var(--card-bg);padding:15px;border-radius:12px;margin:15px 0;text-align:left">
         <div style="margin-bottom:10px">
@@ -890,7 +836,10 @@ function showMonnifyDetails(data, amount) {
         </div>
         <div style="margin-bottom:10px">
           <small style="opacity:0.6">Account Number</small>
-          <h4 style="margin:5px 0;font-family:monospace;font-size:18px">${data.account_number}</h4>
+          <h4 style="margin:5px 0;font-family:monospace;font-size:18px">
+            ${data.account_number}
+            <button onclick="copyToClipboard('${data.account_number}')" class="smallBtn" style="float:right">Copy</button>
+          </h4>
         </div>
         <div>
           <small style="opacity:0.6">Account Name</small>
@@ -900,7 +849,7 @@ function showMonnifyDetails(data, amount) {
 
       <small style="color:#ffa000">Reference: ${data.reference}</small>
       <br><br>
-      <button onclick="closeModal('msgModal')" class="secondaryBtn">I have made the transfer</button>
+      <button onclick="closeModal('msgModal')" class="secondaryBtn">Done</button>
     </div>`;
   openModal("msgModal");
 }
@@ -1537,18 +1486,21 @@ async function loadAccount() {
 }
 
 async function generateAccount() {
-  showLoader("Creating your dedicated account...");
+  showLoader("Creating your PaymentPoint account...");
   try {
-    const res = await fetch(API + "/api/generate-account", {
+    const res = await fetch(API + "/api/wallet/create-dva", {
       method: "POST",
       headers: { Authorization: "Bearer " + getToken() }
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
-    if (res.ok) {
+    
+    if (res.ok && (data.success || data.account_number)) {
+      showMsg("Virtual account created successfully", "success");
       if (el("generateAccountBtn")) el("generateAccountBtn").style.display = "none";
       await loadAccount();
+    } else {
+      showMsg(data.message || data.error || "Failed to create account", "error");
     }
   } catch {
     hideLoader();
