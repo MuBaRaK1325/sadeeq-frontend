@@ -129,7 +129,8 @@ async function loadDashboard() {
   if (currentUser.is_admin) loadAdminData();
   checkBiometricStatus();
 
-  setTimeout(connectWebSocket, 1000);
+  // Start wallet polling instead of 
+  startWalletPolling();
 }
 
 /* ================= NAV ================= */
@@ -1421,16 +1422,73 @@ function loadAdminData() {
 function openModal(id) { el(id).style.display = "flex"; }
 function closeModal(id) { el(id).style.display = "none"; }
 
-/* ================= WS ================= */
-function connectWebSocket() {
-  const wsURL = API.replace("https", "wss");
-  ws = new WebSocket(wsURL + "?token=" + getToken());
-  ws.onmessage = msg => {
-    const data = JSON.parse(msg.data);
-    if (data.type === "wallet_update") updateWallet(data.balance);
-  };
-  ws.onerror = () => console.log("WS error");
-  ws.onclose = () => setTimeout(connectWebSocket, 5000);
+/* ================= WALLET POLLING ================= */
+let walletPollInterval = null;
+let lastBalance = null;
+
+function startWalletPolling() {
+  if (walletPollInterval) clearInterval(walletPollInterval);
+  
+  walletPollInterval = setInterval(async () => {
+    if (!getToken() || !navigator.onLine) return;
+    
+    try {
+      const res = await fetch(API + "/api/me", { 
+        headers: { Authorization: "Bearer " + getToken() } 
+      });
+      if (!res.ok) return;
+      
+      const user = await res.json();
+      if (user.wallet_balance !== undefined) {
+        updateWallet(user.wallet_balance);
+      }
+    } catch (e) {
+      console.log("Wallet polling failed:", e.message);
+    }
+  }, 5000); // 5000ms = 5 seconds
+}
+
+function stopWalletPolling() {
+  if (walletPollInterval) {
+    clearInterval(walletPollInterval);
+    walletPollInterval = null;
+  }
+}
+
+function updateWallet(balance) {
+  if (balance === lastBalance) return;
+  lastBalance = balance;
+  
+  const el = document.getElementById("walletBalance");
+  if (el) el.innerText = `₦${Number(balance).toLocaleString()}`;
+}
+
+// Start polling when user logs in
+function onLoginSuccess() {
+  loadAccount();
+  startWalletPolling();
+}
+
+// Stop polling when user logs out
+function onLogout() {
+  stopWalletPolling();
+  localStorage.removeItem("token");
+  lastBalance = null;
+  showSection("auth");
+}
+
+// Pause polling when tab is hidden, resume when visible
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopWalletPolling();
+  } else if (getToken()) {
+    startWalletPolling();
+  }
+});
+
+// Start polling on page load if user is already logged in
+if (getToken()) {
+  startWalletPolling();
 }
 
 /* ================= LOGOUT ================= */
