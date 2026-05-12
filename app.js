@@ -884,39 +884,7 @@ function showPaymentPointDetails(data, amount) {
   openModal("msgModal");
 }
 
-/* ================= ADMIN: PROFIT DASHBOARD ================= */
-async function loadProfitDashboard() {
-  const from = el("profitFrom")?.value || new Date(new Date().setDate(1)).toISOString().split('T')[0];
-  const to = el("profitTo")?.value || new Date().toISOString().split('T')[0];
 
-  showLoader("Loading profit data...");
-  try {
-    const res = await fetch(`${API}/admin/profit?from=${from}&to=${to}`, {
-      headers: { Authorization: "Bearer " + getToken() }
-    });
-    const data = await res.json();
-    hideLoader();
-
-    if (el("totalProfit")) el("totalProfit").innerText = formatNaira(data.total);
-    if (el("adminWalletBalance")) el("adminWalletBalance").innerText = formatNaira(data.admin_wallet);
-    if (el("adminWalletBalance2")) el("adminWalletBalance2").innerText = formatNaira(data.admin_wallet);
-
-    const table = el("profitTable");
-    if (table) {
-      table.innerHTML = `<tr><th>Date</th><th>Sales</th><th>Profit</th></tr>`;
-      data.daily.forEach(d => {
-        table.innerHTML += `<tr>
-          <td>${formatDate(d.date)}</td>
-          <td>${d.total_sales}</td>
-          <td>${formatNaira(d.total_profit)}</td>
-        </tr>`;
-      });
-    }
-  } catch {
-    hideLoader();
-    showMsg("Failed to load profit data", "error");
-  }
-}
 
 /* ================= ADMIN: TRANSACTIONS MANAGER ================= */
 async function loadAdminTransactions() {
@@ -1358,146 +1326,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-/* ================= ADMIN: WITHDRAWALS ================= */
-const NIGERIAN_BANKS = [
-  "Access Bank", "Citibank", "Ecobank", "Fidelity Bank", "First Bank", "FCMB",
-  "GTBank", "Heritage Bank", "Keystone Bank", "Polaris Bank", "Stanbic IBTC",
-  "Standard Chartered", "Sterling Bank", "Union Bank", "UBA", "Unity Bank",
-  "Wema Bank", "Zenith Bank", "Kuda", "Opay", "Palmpay", "Moniepoint",
-  "VFD Microfinance", "Carbon", "Rubies MFB", "Sparkle"
-];
 
-function populateBankDropdown() {
-  const bankSelect = el("withdrawBank");
-  if (!bankSelect) return;
-
-  bankSelect.innerHTML = '<option value="">Select Bank</option>';
-  NIGERIAN_BANKS.forEach(bank => {
-    bankSelect.innerHTML += `<option value="${bank}">${bank}</option>`;
-  });
-}
-
-async function loadWithdrawals() {
-  try {
-    const res = await fetch(API + "/admin/withdrawals", {
-      headers: { Authorization: "Bearer " + getToken() }
-    });
-    if (!res.ok) throw new Error("Failed to fetch");
-
-    const wds = await res.json();
-    const list = el("withdrawalsList");
-    if (!list) return;
-
-    list.innerHTML = "";
-
-    if (!wds.length) {
-      list.innerHTML = `<p style="text-align:center;color:#888">No withdrawal requests yet</p>`;
-      return;
-    }
-
-    wds.forEach(w => {
-      const statusColor = w.status === "PAID"? "#00c853" : w.status === "PENDING"? "#ffa000" : "#ff4d4d";
-      const transferInfo = w.transfer_code? `<br><small>Transfer ID: ${w.transfer_code}</small>` : '';
-      const dateStr = new Date(w.created_at).toLocaleString('en-NG', {
-        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-      });
-
-      const approveBtn = w.status === "PENDING"
-       ? `<button onclick="approveWithdrawal('${w.reference}')" class="successBtn" style="margin-top:8px">Approve & Send to Bank</button>`
-        : '';
-
-      list.innerHTML += `<div class="withdrawCard">
-        <div style="display:flex;justify-content:space-between;align-items:start">
-          <div>
-            <strong style="font-size:18px">${formatNaira(w.amount)}</strong><br>
-            ${w.bank_name}<br>
-            ${w.account_number} - ${w.account_name}<br>
-            <span style="color:${statusColor};font-weight:600">${w.status}</span>
-            ${transferInfo}<br>
-            <small style="color:#888">${dateStr}</small><br>
-            <small>Ref: ${w.reference}</small>
-          </div>
-        </div>
-        ${approveBtn}
-      </div>`;
-    });
-  } catch (err) {
-    console.log("Load withdrawals error:", err);
-    showMsg("Failed to load withdrawals", "error");
-  }
-}
-
-async function requestWithdrawal() {
-  const amount = el("withdrawAmount")?.value;
-  const bank_name = el("withdrawBank")?.value;
-  const account_number = el("withdrawAccountNumber")?.value;
-  const account_name = el("withdrawAccountName")?.value;
-
-  if (!amount ||!bank_name ||!account_number ||!account_name) {
-    return showMsg("Fill all fields", "error");
-  }
-
-  if (Number(amount) < 100) {
-    return showMsg("Minimum withdrawal is ₦100", "error");
-  }
-
-  if (account_number.length!== 10) {
-    return showMsg("Account number must be 10 digits", "error");
-  }
-
-  showLoader("Creating withdrawal request...");
-  try {
-    const res = await fetch(API + "/admin/withdraw-request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
-      body: JSON.stringify({
-        amount: Number(amount),
-        bank_name,
-        account_number,
-        account_name
-      })
-    });
-    const data = await res.json();
-    hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
-    if (res.ok) {
-      el("withdrawAmount").value = '';
-      el("withdrawBank").value = '';
-      el("withdrawAccountNumber").value = '';
-      el("withdrawAccountName").value = '';
-      loadWithdrawals();
-      loadDashboard();
-    }
-  } catch (err) {
-    hideLoader();
-    console.log("Request withdrawal error:", err);
-    showMsg("Network error. Check connection", "error");
-  }
-}
-
-async function approveWithdrawal(reference) {
-  if (!confirm("Send money to bank? This cannot be reversed.")) return;
-
-  showLoader("Processing withdrawal...");
-  try {
-    const res = await fetch(API + "/admin/withdraw/approve", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
-      body: JSON.stringify({ reference })
-    });
-    const data = await res.json();
-    hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
-    if (res.ok) {
-      loadWithdrawals();
-      loadDashboard();
-    }
-  } catch (err) {
-    hideLoader();
-    console.log("Approve withdrawal error:", err);
-    showMsg("Network error during transfer", "error");
-  }
-}
 
 /* ================= ACCOUNT ================= */
 async function loadAccount() {
@@ -1583,7 +1412,6 @@ async function submitPin() {
 
 /* ================= ADMIN DATA LOADER ================= */
 function loadAdminData() {
-  loadProfitDashboard();
   loadWithdrawals();
   loadAdminPlans();
   loadAdminUsers();
