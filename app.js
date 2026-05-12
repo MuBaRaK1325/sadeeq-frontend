@@ -1493,7 +1493,8 @@ if (getToken()) {
 
 /* ================= LOGOUT ================= */
 function logout() {
-  if (ws) ws.close();
+  stopWalletPolling();  // stop polling instead of closing ws
+  lastBalance = null;
   localStorage.clear();
   window.location.href = "login.html";
 }
