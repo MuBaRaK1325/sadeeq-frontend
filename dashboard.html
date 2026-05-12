@@ -474,24 +474,30 @@ padding:8px 16px;
 
 /* RECEIPT MODAL */
 #receiptModal{
-display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,0.7);
-backdrop-filter:blur(8px);
-z-index:99999;
-align-items:center;
-justify-content:center;
-padding:1rem;
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(8px);
+  z-index:99999;
+  align-items:center;
+  justify-content:center;
+  padding:1rem;
 }
 
 .receiptBox{
-background:linear-gradient(135deg, #0a1f14, #1a3a28);
-border-radius:24px;
-max-width:28rem;
-width:100%;
-border:1px solid rgba(22,163,74,0.4);
-box-shadow:0 0 40px rgba(22,163,74,0.3);
+  background:linear-gradient(135deg, #0a1f14, #1a3a28);
+  border-radius:24px;
+  max-width:28rem;
+  width:100%;
+  border:1px solid rgba(22,163,74,0.4);
+  box-shadow:0 0 40px rgba(22,163,74,0.3);
+  overflow:hidden;
+}
+
+/* Optional: style for receipt content inside */
+#receiptContent {
+  padding:1px;
 }
 </style>
 </head>
@@ -924,16 +930,15 @@ box-shadow:0 0 40px rgba(22,163,74,0.3);
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 let currentTxnId = '';
 
 function showReceipt(data) {
-  document.getElementById('receiptNumber').textContent = data.number;
+  document.getElementById('receiptNumber').textContent = data.number || 'N/A';
   document.getElementById('receiptNetwork').textContent = data.network || 'N/A';
-  document.getElementById('receiptPlan').textContent = data.plan || data.type;
+  document.getElementById('receiptPlan').textContent = data.plan || data.type || 'N/A';
   document.getElementById('receiptDate').textContent = data.date;
-  document.getElementById('receiptPrice').textContent = '₦' + data.price;
+  document.getElementById('receiptPrice').textContent = '₦' + Number(data.price).toLocaleString();
   currentTxnId = data.txnId || data.id || 'TVS' + Date.now().toString().slice(-8);
   document.getElementById('txnId').textContent = 'Transaction ID: ' + currentTxnId;
 
@@ -942,25 +947,12 @@ function showReceipt(data) {
     failed: {bg: 'rgba(239,68,68,0.15)', color: '#f87171', border: 'rgba(239,68,68,0.3)', text: 'FAILED'},
     pending: {bg: 'rgba(234,179,8,0.15)', color: '#facc15', border: 'rgba(234,179,8,0.3)', text: 'PENDING'}
   };
-  const s = statusColors[data.status] || statusColors.pending;
+  const s = statusColors[(data.status || 'pending').toLowerCase()] || statusColors.pending;
   const badge = document.getElementById('statusBadge');
   badge.style.background = s.bg;
   badge.style.color = s.color;
   badge.style.borderColor = s.border;
   badge.querySelector('span').textContent = s.text;
-
-  QRCode.toCanvas(document.getElementById('qrCanvas'), JSON.stringify({
-    id: currentTxnId,
-    number: data.number,
-    amount: data.price,
-    date: data.date,
-    status: data.status,
-    company: 'TEEVERSh'
-  }), {
-    width: 120,
-    margin: 0,
-    color: { dark: '#1a0b2e', light: '#ffffff' }
-  });
 
   document.getElementById('receiptModal').style.display = 'flex';
 }
@@ -978,22 +970,22 @@ function copyTxnId() {
 }
 
 async function downloadReceipt() {
-  const canvas = await html2canvas(document.getElementById('receiptContent'), {
+  const receiptContent = document.getElementById('receiptContent');
+  const canvas = await html2canvas(receiptContent, {
     backgroundColor: '#1a0b2e',
     scale: 2,
     useCORS: true,
-    logging: false,
-    windowWidth: document.getElementById('receiptContent').scrollWidth,
-    windowHeight: document.getElementById('receiptContent').scrollHeight
+    logging: false
   });
   const link = document.createElement('a');
   link.download = `Teeversh-Receipt-${document.getElementById('receiptNumber').textContent}.png`;
-  link.href = canvas.toDataURL();
+  link.href = canvas.toDataURL('image/png');
   link.click();
 }
 
 async function shareReceipt() {
-  const canvas = await html2canvas(document.getElementById('receiptContent'), {
+  const receiptContent = document.getElementById('receiptContent');
+  const canvas = await html2canvas(receiptContent, {
     backgroundColor: '#1a0b2e',
     scale: 2,
     useCORS: true,
@@ -1039,6 +1031,7 @@ function showConfirm(title, msg, onYes){
   document.getElementById('confirmModal').style.display = 'flex';
 }
 </script>
+
 <script src="app.js?v=2.3.1"></script>
 
 </body>

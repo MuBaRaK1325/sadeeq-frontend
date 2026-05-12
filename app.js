@@ -227,12 +227,40 @@ async function fetchTransactions() {
 
     if (el("transactionHistory")) {
       el("transactionHistory").innerHTML = "";
-      tx.slice(0, 5).forEach(t => el("transactionHistory").appendChild(txCard(t)));
+      tx.slice(0, 5).forEach(t => {
+        const card = txCard(t);
+        card.onclick = () => showReceipt({
+          number: t.phone || t.reference,
+          network: t.network,
+          plan: t.plan_name || t.type,
+          type: t.type,
+          date: new Date(t.created_at).toLocaleString(),
+          price: t.amount,
+          status: t.status,
+          txnId: t.reference,
+          id: t.id
+        });
+        el("transactionHistory").appendChild(card);
+      });
     }
 
     if (el("allTransactions")) {
       el("allTransactions").innerHTML = "";
-      tx.forEach(t => el("allTransactions").appendChild(txCard(t)));
+      tx.forEach(t => {
+        const card = txCard(t);
+        card.onclick = () => showReceipt({
+          number: t.phone || t.reference,
+          network: t.network,
+          plan: t.plan_name || t.type,
+          type: t.type,
+          date: new Date(t.created_at).toLocaleString(),
+          price: t.amount,
+          status: t.status,
+          txnId: t.reference,
+          id: t.id
+        });
+        el("allTransactions").appendChild(card);
+      });
     }
   } catch (e) {
     console.error("Fetch transactions error:", e);
@@ -248,11 +276,13 @@ function txCard(t) {
   const statusColor = t.status === "SUCCESS"? "#00c853" : t.status === "FAILED"? "#ff4d4d" : "#ffa000";
   div.innerHTML = `
     <strong>${t.type}</strong> ${formatNaira(t.amount)}<br>
-    ${t.phone || t.network || ""}<br>
+    ${t.phone || t.network || t.reference || ""}<br>
     <span style="color:${statusColor}">${t.status}</span>
     <small style="float:right">${formatDate(t.created_at)}</small>`;
+  div.style.cursor = "pointer";
   return div;
 }
+
 
 /* ================= PLANS ================= */
 async function loadPlans() {
