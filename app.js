@@ -129,8 +129,7 @@ async function loadDashboard() {
   if (currentUser.is_admin) loadAdminData();
   checkBiometricStatus();
 
-  // Start wallet polling instead of 
-  startWalletPolling();
+  setTimeout(connectWebSocket, 1000);
 }
 
 /* ================= NAV ================= */
@@ -187,30 +186,50 @@ async function loadWallet() {
         <button onclick="generateDVA()" class="primaryBtn">Generate Virtual Account</button>`;
     }
   }
-}
 
-async function generateDVA() {
-  try {
-    const res = await fetch(API + "/api/wallet/create-dva", {
-      method: "POST",
-      headers: { Authorization: "Bearer " + getToken() }
-    });
-    const data = await res.json();
-
-    if (data.success || data.account_number) {
-      showToast("Virtual account created", "success");
-      loadWallet(); // reload to show the account
-    } else {
-      showToast(data.message || data.error || "Failed to create account", "error");
+  // --- RENDER TRANSACTIONS ---
+  const list = el("walletTransactionsList");
+  const transactions = wallet.transactions || [];
+  if (list) {
+    if (!transactions.length) {
+      list.innerHTML = `<p style="opacity:0.6;text-align:center;">No wallet transactions yet</p>`;
+      return;
     }
-  } catch (err) {
-    showToast("Network error", "error");
+    list.innerHTML = "";
+    transactions.forEach(tx => {
+      const statusColor = tx.tx_status === "SUCCESS" ? "#00c853" : tx.tx_status === "PENDING" ? "#ffa000" : "#ff4d4d";
+      const wasManual = tx.metadata?.manual_deducted ? '<span class="badge badgeWarning">MANUAL</span>' : '';
+      const wasReversed = tx.metadata?.reversed ? '<span class="badge badgeDanger">REVERSED</span>' : '';
+
+      list.innerHTML += `
+        <div class="transactionCard">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+            <div>
+              <strong>${tx.type || 'Wallet Tx'}</strong> ${wasManual} ${wasReversed}<br>
+              <small style="font-family:monospace">${tx.reference || 'N/A'}</small>
+            </div>
+            <div style="text-align:right">
+              <strong style="font-size:18px">${formatNaira(tx.amount || 0)}</strong><br>
+              <span style="color:${statusColor};font-weight:600">${tx.tx_status || tx.type.toUpperCase()}</span>
+            </div>
+          </div>
+          <small style="opacity:0.5">${formatDate(tx.created_at)}</small>
+        </div>`;
+    });
   }
 }
 
+// Helper for copy button
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text);
-  showToast("Copied to clipboard", "success");
+  showMsg("Copied to clipboard!", "success");
+}
+
+/* ================= COPY ACCOUNT ================= */
+function copyAccount() {
+  const acc = el("accountNumber").innerText;
+  navigator.clipboard.writeText(acc);
+  showMsg("Account number copied!", "success");
 }
 
 /* ================= TRANSACTIONS ================= */
@@ -283,7 +302,6 @@ function txCard(t) {
   div.style.cursor = "pointer";
   return div;
 }
-
 
 /* ================= PLANS ================= */
 async function loadPlans() {
@@ -720,7 +738,7 @@ async function purchaseWithBiometric() {
   }
 }
 
-/* ================= BUY DATA - WITH SADEEQ RECEIPT ================= */
+/* ================= BUY DATA - WITH TEEVERSH RECEIPT ================= */
 async function buyData(pin) {
   const phone = selectedPhone || el("dataPhone")?.value;
 
@@ -743,9 +761,8 @@ async function buyData(pin) {
       updateWallet(data.balance);
       fetchTransactions();
       
-      // Show SADEEQ receipt
+      // Show TEEVERSH receipt instead of toast
       showReceipt({
-        company: 'Sadeeq',
         reference: data.reference || data.transaction_id || 'TXN' + Date.now(),
         created_at: data.created_at || new Date().toISOString(),
         type: 'Data',
@@ -767,7 +784,7 @@ async function buyData(pin) {
   }
 }
 
-/* ================= BUY AIRTIME - WITH SADEEQ RECEIPT ================= */
+/* ================= BUY AIRTIME - WITH TEEVERSH RECEIPT ================= */
 async function buyAirtime(pin) {
   const phone = selectedPhone || el("airtimePhone")?.value;
   const amount = el("airtimeAmount")?.value;
@@ -791,9 +808,8 @@ async function buyAirtime(pin) {
       updateWallet(data.balance);
       fetchTransactions();
 
-      // Show SADEEQ receipt
+      // Show TEEVERSH receipt instead of toast
       showReceipt({
-        company: 'Sadeeq',
         reference: data.reference || data.transaction_id || 'TXN' + Date.now(),
         created_at: data.created_at || new Date().toISOString(),
         type: 'Airtime',
@@ -1422,128 +1438,23 @@ function loadAdminData() {
 function openModal(id) { el(id).style.display = "flex"; }
 function closeModal(id) { el(id).style.display = "none"; }
 
-/* ================= WALLET POLLING ================= */
-let walletPollInterval = null;
-let lastBalance = null;
-
-function startWalletPolling() {
-  if (walletPollInterval) clearInterval(walletPollInterval);
-  
-  walletPollInterval = setInterval(async () => {
-    if (!getToken() || !navigator.onLine) return;
-    
-    try {
-      const res = await fetch(API + "/api/me", { 
-        headers: { Authorization: "Bearer " + getToken() } 
-      });
-      if (!res.ok) return;
-      
-      const user = await res.json();
-      if (user.wallet_balance !== undefined) {
-        updateWallet(user.wallet_balance);
-      }
-    } catch (e) {
-      console.log("Wallet polling failed:", e.message);
-    }
-  }, 5000); // 5000ms = 5 seconds
+/* ================= WS ================= */
+function connectWebSocket() {
+  const wsURL = API.replace("https", "wss");
+  ws = new WebSocket(wsURL + "?token=" + getToken());
+  ws.onmessage = msg => {
+    const data = JSON.parse(msg.data);
+    if (data.type === "wallet_update") updateWallet(data.balance);
+  };
+  ws.onerror = () => console.log("WS error");
+  ws.onclose = () => setTimeout(connectWebSocket, 5000);
 }
 
-function stopWalletPolling() {
-  if (walletPollInterval) {
-    clearInterval(walletPollInterval);
-    walletPollInterval = null;
-  }
-}
-
-function updateWallet(balance) {
-  if (balance === lastBalance) return;
-  lastBalance = balance;
-  
-  const el = document.getElementById("walletBalance");
-  if (el) el.innerText = `₦${Number(balance).toLocaleString()}`;
-}
-
-// Start polling when user logs in
-function onLoginSuccess() {
-  loadAccount();
-  startWalletPolling();
-}
-
-// Stop polling when user logs out
-function onLogout() {
-  stopWalletPolling();
-  localStorage.removeItem("token");
-  lastBalance = null;
-  showSection("auth");
-}
-
-// Pause polling when tab is hidden, resume when visible
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    stopWalletPolling();
-  } else if (getToken()) {
-    startWalletPolling();
-  }
-});
-
-// Start polling on page load if user is already logged in
-if (getToken()) {
-  startWalletPolling();
-}
-
-/* ================= LOAD DASHBOARD ================= */
-async function loadDashboard() {
-  if (!checkAuth()) return;
-
-  showLoader("Loading dashboard..."); // show loader
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-  try {
-    const res = await fetch(API + "/api/me", { 
-      headers: { Authorization: "Bearer " + getToken() },
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-
-    if (!res.ok) throw new Error("Failed to fetch user - " + res.status);
-    
-    const contentType = res.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error("Server returned non-JSON response");
-    }
-    
-    currentUser = await res.json();
-    window.CURRENT_USER_ID = currentUser.id;
-    console.log("Current user tier:", currentUser.user_tier);
-    
-  } catch (e) {
-    clearTimeout(timeout);
-    console.error("Load user error:", e);
-    hideLoader(); // close loader on error
-    logout();
-    return;
-  }
-
-  hideLoader(); // close loader on success
-
-  if (el("usernameDisplay")) el("usernameDisplay").innerText = "Hello " + currentUser.username;
-  if (el("companyBadge")) el("companyBadge").innerText = currentUser.company.toUpperCase();
-
-  if (currentUser && currentUser.is_admin === true) {
-    document.querySelectorAll(".adminOnly").forEach(e => e.style.display = "block");
-    if (el("adminWalletBalance")) el("adminWalletBalance").innerText = formatNaira(currentUser.admin_wallet);
-    if (el("adminWalletBalance2")) el("adminWalletBalance2").innerText = formatNaira(currentUser.admin_wallet);
-  }
-
-  initNavigation();
-  await loadAccount();
-  await loadPlans();
-  fetchTransactions();
-  if (currentUser.is_admin) loadAdminData();
-  checkBiometricStatus();
-
-  startWalletPolling(); // use polling instead of websocket
+/* ================= LOGOUT ================= */
+function logout() {
+  if (ws) ws.close();
+  localStorage.clear();
+  window.location.href = "login.html";
 }
 
 /* ================= START ================= */
