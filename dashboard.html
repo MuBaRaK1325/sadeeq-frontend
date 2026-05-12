@@ -565,7 +565,7 @@ padding:8px 16px;
   <label><input id="editPlanRestricted" type="checkbox"> Restricted to my company</label>
   <label><input id="editPlanActive" type="checkbox"> Active</label>
   <div style="display:flex;gap:10px;margin-top:15px;">
-    <button onclick="savePlanEdit()" class="successBtn">Update Plan</button>
+    <button id="savePlanBtn" class="successBtn">Update Plan</button>
     <button onclick="closeModal('editPlanModal')" class="dangerBtn">Cancel</button>
   </div>
 </div>
@@ -595,68 +595,61 @@ padding:8px 16px;
         </div>
       </div>
 
-<div style="padding:24px; display:flex; flex-direction:column; gap:20px;">
-  
-  <!-- Receipt Details -->
-  <div style="background:rgba(0,0,0,0.4); border-radius:16px; padding:20px; border:1px solid rgba(22,163,74,0.2);">
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Phone Number</span>
-      <span id="receiptNumber" style="color:white; font-family:monospace; font-weight:bold; text-align:right;"></span>
-    </div>
-    
-    <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:16px 0;"></div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Network</span>
-      <span id="receiptNetwork" style="color:white; font-size:14px; text-align:right;"></span>
-    </div>
-    
-    <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:16px 0;"></div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Plan</span>
-      <span id="receiptPlan" style="color:white; font-size:14px; text-align:right;"></span>
-    </div>
-    
-    <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:16px 0;"></div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Date & Time</span>
-      <span id="receiptDate" style="color:white; font-size:14px; text-align:right;"></span>
-    </div>
-    
-    <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:16px 0;"></div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Amount</span>
-      <span id="receiptPrice" style="color:white; font-weight:bold; font-size:24px;"></span>
-    </div>
-  </div>
+      <div style="padding:24px; display:flex; flex-direction:column; gap:20px;">
+        
+        <div style="background:rgba(0,0,0,0.4); border-radius:16px; padding:20px; border:1px solid rgba(22,163,74,0.2);">
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Phone Number</span>
+            <span id="receiptNumber" style="color:white; font-family:monospace; font-weight:bold; text-align:right;"></span>
+          </div>
+          
+          <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:16px 0;"></div>
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Network</span>
+            <span id="receiptNetwork" style="color:white; font-size:14px; text-align:right;"></span>
+          </div>
+          
+          <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:16px 0;"></div>
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Plan</span>
+            <span id="receiptPlan" style="color:white; font-size:14px; text-align:right;"></span>
+          </div>
+          
+          <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:16px 0;"></div>
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Date & Time</span>
+            <span id="receiptDate" style="color:white; font-size:14px; text-align:right;"></span>
+          </div>
+          
+          <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:16px 0;"></div>
+          
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:rgba(187,247,208,0.9); font-size:14px; font-weight:500;">Amount</span>
+            <span id="receiptPrice" style="color:white; font-weight:bold; font-size:24px;"></span>
+          </div>
+        </div>
 
-  <!-- Action Buttons -->
-  <div style="display:flex; flex-direction:column; gap:12px;">
-    <button id="downloadReceiptBtn" style="width:100%; padding:14px; border-radius:12px; border:none; background:linear-gradient(135deg, #16a34a, #22c55e); color:white; font-weight:600; cursor:pointer;">
-      Download Receipt
-    </button>
-    <button id="shareReceiptBtn" style="width:100%; padding:14px; border-radius:12px; border:1px solid rgba(22,163,74,0.4); background:transparent; color:white; font-weight:600; cursor:pointer;">
-      Share Receipt
-    </button>
-    <button id="closeReceiptBtn" style="width:100%; padding:12px; border-radius:12px; border:none; background:rgba(255,255,255,0.1); color:rgba(187,247,208,0.8); font-weight:500; cursor:pointer;">
-      Close
-    </button>
-  </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <button id="downloadReceiptBtn" onclick="downloadReceipt()" style="width:100%; padding:14px; border-radius:12px; border:none; background:linear-gradient(135deg, #16a34a, #22c55e); color:white; font-weight:600; cursor:pointer;">
+            Download Receipt
+          </button>
+          <button id="shareReceiptBtn" onclick="shareReceipt()" style="width:100%; padding:14px; border-radius:12px; border:1px solid rgba(22,163,74,0.4); background:transparent; color:white; font-weight:600; cursor:pointer;">
+            Share Receipt
+          </button>
+          <button onclick="closeReceipt()" style="width:100%; padding:12px; border-radius:12px; border:none; background:rgba(255,255,255,0.1); color:rgba(187,247,208,0.8); font-weight:500; cursor:pointer;">
+            Close
+          </button>
+        </div>
 
-  <!-- Footer -->
-  <div style="text-align:center;">
-    <p style="color:rgba(187,247,208,0.4); font-size:10px; font-family:monospace; letter-spacing:0.2em; margin:0;">SADEEQ PAYMENT GATEWAY</p>
-    <p id="txnId" style="color:rgba(187,247,208,0.3); font-size:9px; margin:4px 0 0; cursor:pointer;" onclick="copyTxnId()" title="Click to copy"></p>
-  </div>
-</div>
-
-    <div style="padding:0 24px 24px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-      <button onclick="downloadReceipt()" style="background:rgba(22,163,74,0.2); color:#bbf7d0; font-weight:600; padding:12px; border-radius:12px; border:1px solid rgba(22,163,74,0.4); cursor:pointer;">Download</button>
-      <button onclick="shareReceipt()" style="background:linear-gradient(90deg, #16a34a, #15803d); color:white; font-weight:600; padding:12px; border-radius:12px; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(22,163,74,0.4);">Share</button>
+        <div style="text-align:center;">
+          <p style="color:rgba(187,247,208,0.4); font-size:10px; font-family:monospace; letter-spacing:0.2em; margin:0;">SADEEQ PAYMENT GATEWAY</p>
+          <p id="txnId" style="color:rgba(187,247,208,0.3); font-size:9px; margin:4px 0 0; cursor:pointer;" onclick="copyTxnId()" title="Click to copy"></p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -681,11 +674,12 @@ padding:8px 16px;
 <div class="adminWalletCard adminOnly">
 <p>Admin Profit Wallet</p>
 <strong id="adminWalletBalance">₦0</strong>
+<strong id="adminWalletBalance2" style="display:block;margin-top:5px;">₦0</strong>
 </div>
 
 <div class="quickActions">
-<div class="quickCard" onclick="showSection('data')">📶 Buy Data</div>
-<div class="quickCard" onclick="showSection('airtime')">📞 Buy Airtime</div>
+<div class="quickCard" onclick="showSection('buyData')">📶 Buy Data</div>
+<div class="quickCard" onclick="showSection('buyAirtime')">📞 Buy Airtime</div>
 <div class="quickCard" onclick="showSection('fund')">💰 Fund Wallet</div>
 <div class="quickCard adminOnly" onclick="showSection('profitDashboard')">📊 Profit</div>
 </div>
@@ -706,27 +700,29 @@ padding:8px 16px;
 <button onclick="showSection('home')" class="backBtn">⬅ Back</button>
 </section>
 
-<!-- DATA -->
-<section id="data" class="section">
+<!-- BUY DATA -->
+<section id="buyData" class="section">
 <button onclick="showSection('home')" class="backBtn">⬅ Back</button>
 <h3>Select Network</h3>
 <div class="networkGrid">
-<div class="networkItem" onclick="selectNetwork('mtn', this)"><img src="images/mtn.png" alt="MTN"></div>
-<div class="networkItem" onclick="selectNetwork('glo', this)"><img src="images/glo.png" alt="GLO"></div>
-<div class="networkItem" onclick="selectNetwork('airtel', this)"><img src="images/airtel.png" alt="AIRTEL"></div>
+<div class="networkItem" onclick="selectNetwork('MTN', this)"><img src="images/mtn.png" alt="MTN"></div>
+<div class="networkItem" onclick="selectNetwork('GLO', this)"><img src="images/glo.png" alt="GLO"></div>
+<div class="networkItem" onclick="selectNetwork('AIRTEL', this)"><img src="images/airtel.png" alt="AIRTEL"></div>
+<div class="networkItem" onclick="selectNetwork('9MOBILE', this)"><img src="images/9mobile.png" alt="9MOBILE"></div>
 </div>
 <input id="dataPhone" type="tel" placeholder="Phone Number">
 <div id="planList"></div>
 </section>
 
-<!-- AIRTIME -->
-<section id="airtime" class="section">
+<!-- BUY AIRTIME -->
+<section id="buyAirtime" class="section">
 <button onclick="showSection('home')" class="backBtn">⬅ Back</button>
 <h3>Select Network</h3>
 <div class="networkGrid">
-<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('mtn', this)"><img src="images/mtn.png" alt="MTN"></div>
-<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('glo', this)"><img src="images/glo.png" alt="GLO"></div>
-<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('airtel', this)"><img src="images/airtel.png" alt="AIRTEL"></div>
+<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('MTN', this)">MTN</div>
+<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('GLO', this)">GLO</div>
+<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('AIRTEL', this)">AIRTEL</div>
+<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('9MOBILE', this)">9MOBILE</div>
 </div>
 <input id="airtimePhone" type="tel" placeholder="Phone Number">
 <input id="airtimeAmount" type="number" placeholder="Amount">
@@ -736,11 +732,11 @@ padding:8px 16px;
 <!-- TRANSACTIONS -->
 <section id="transactions" class="section">
 <button onclick="showSection('home')" class="backBtn">⬅ Back</button>
-<h3>All Transactions</h3>
+<h3>Recent Transactions</h3>
+<div id="transactionHistory"></div>
+<h3 style="margin-top:30px;">All Transactions</h3>
 <div id="allTransactions"></div>
 </section>
-
-
 
 <!-- ADMIN: TRANSACTIONS MANAGER -->
 <section id="transactionsManager" class="section adminOnly">
@@ -755,14 +751,6 @@ padding:8px 16px;
       <option value="FAILED">Failed</option>
       <option value="PENDING">Pending</option>
       <option value="REVERSED">Reversed</option>
-    </select>
-    <select id="txProviderFilter" onchange="loadAdminTransactions()" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);min-width:140px">
-      <option value="">All Providers</option>
-      <option value="maitama">Maitama</option>
-      <option value="cheapdatahub">CheapDataHub</option>
-      <option value="subpadi">SubPadi</option>
-      <option value="monnify">Monnify</option>
-      <option value="flutterwave">Flutterwave</option>
     </select>
     <input id="txSearch" type="text" placeholder="Search reference or email" 
            onkeyup="loadAdminTransactions()" 
@@ -801,7 +789,11 @@ padding:8px 16px;
 <!-- ADMIN: WITHDRAWALS -->
 <section id="withdrawals" class="section adminOnly">
   <button onclick="showSection('profile')" class="backBtn">⬅ Back</button>
-
+  <h3>💸 Withdrawals</h3>
+  <div class="adminSection">
+    <div id="withdrawalsList"></div>
+  </div>
+</section>
 
 <!-- PROFILE -->
 <section id="profile" class="section">
@@ -846,7 +838,6 @@ padding:8px 16px;
 </div>
 </section>
 
-
 <!-- PIN MODAL -->
 <div id="pinModal" class="modal">
   <div class="modalBox">
@@ -881,8 +872,6 @@ padding:8px 16px;
 </div>
 </div>
 
-
-
 <!-- MESSAGE MODAL -->
 <div id="msgModal" class="modal">
 <div class="modalBox" id="msgBox"></div>
@@ -903,14 +892,16 @@ padding:8px 16px;
 <!-- NAV -->
 <div class="bottomNav">
 <button onclick="showSection('home')">🏠<br>Home</button>
-<button onclick="showSection('data')">📶<br>Data</button>
+<button onclick="showSection('buyData')">📶<br>Data</button>
+<button onclick="showSection('buyAirtime')">📞<br>Airtime</button>
 <button onclick="showSection('transactions')">📊<br>History</button>
 <button onclick="showSection('profile')">👤<br>Profile</button>
+<button class="adminOnly" onclick="showSection('plansManager')">⚙️<br>Admin</button>
 </div>
 
 <!-- INSTALL BANNER -->
 <div id="installBanner">
-  <span>Install TEEVERSH for faster access</span>
+  <span>Install SADEEQ for faster access</span>
   <button id="installBtn" class="primaryBtn" style="width:auto;margin:0 5px;">Install</button>
   <button id="closeBanner" class="dangerBtn" style="width:auto;margin:0 5px;">Later</button>
 </div>
@@ -922,10 +913,10 @@ let currentTxnId = '';
 function showReceipt(data) {
   document.getElementById('receiptNumber').textContent = data.number || 'N/A';
   document.getElementById('receiptNetwork').textContent = data.network || 'N/A';
-  document.getElementById('receiptPlan').textContent = data.plan || data.type || 'N/A';
+  document.getElementById('receiptPlan').textContent = data.plan_name || data.plan || data.type || 'N/A';
   document.getElementById('receiptDate').textContent = data.date;
   document.getElementById('receiptPrice').textContent = '₦' + Number(data.price).toLocaleString();
-  currentTxnId = data.txnId || data.id || 'TVS' + Date.now().toString().slice(-8);
+  currentTxnId = data.txnId || data.id || data.reference || 'TXN' + Date.now().toString().slice(-8);
   document.getElementById('txnId').textContent = 'Transaction ID: ' + currentTxnId;
 
   const statusColors = {
@@ -964,7 +955,7 @@ async function downloadReceipt() {
     logging: false
   });
   const link = document.createElement('a');
-  link.download = `Teeversh-Receipt-${document.getElementById('receiptNumber').textContent}.png`;
+  link.download = `Sadeeq-Receipt-${document.getElementById('receiptNumber').textContent}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
@@ -978,12 +969,12 @@ async function shareReceipt() {
     logging: false
   });
   canvas.toBlob(async (blob) => {
-    const file = new File([blob], 'teeversh-receipt.png', {type: 'image/png'});
+    const file = new File([blob], 'sadeeq-receipt.png', {type: 'image/png'});
     if (navigator.share && navigator.canShare && navigator.canShare({files: [file]})) {
       try {
         await navigator.share({
           files: [file],
-          title: 'Teeversh Receipt',
+          title: 'Sadeeq Receipt',
           text: `Transaction ${document.getElementById('receiptPrice').textContent} - ${document.getElementById('receiptNumber').textContent}`
         });
       } catch(e) {
@@ -998,27 +989,9 @@ async function shareReceipt() {
 document.getElementById('receiptModal').addEventListener('click', function(e) {
   if (e.target === this) closeReceipt();
 });
-
-// Show message modal helper
-function showMsg(msg, isError = false){
-  const box = document.getElementById('msgBox');
-  box.innerHTML = `<p style="margin-bottom:16px;color:${isError ? '#ff4d4d' : 'white'}">${msg}</p><button onclick="closeModal('msgModal')" class="primaryBtn">OK</button>`;
-  document.getElementById('msgModal').style.display = 'flex';
-}
-
-// Show confirm modal helper
-function showConfirm(title, msg, onYes){
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMsg').textContent = msg;
-  document.getElementById('confirmYes').onclick = () => {
-    closeModal('confirmModal');
-    onYes();
-  };
-  document.getElementById('confirmModal').style.display = 'flex';
-}
 </script>
 
-<script src="app.js?v=2.3.1"></script>
+<script src="app.js?v=2.3.2"></script>
 
 </body>
 </html>
