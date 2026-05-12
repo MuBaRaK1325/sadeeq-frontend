@@ -1491,12 +1491,59 @@ if (getToken()) {
   startWalletPolling();
 }
 
-/* ================= LOGOUT ================= */
-function logout() {
-  stopWalletPolling();  // stop polling instead of closing ws
-  lastBalance = null;
-  localStorage.clear();
-  window.location.href = "login.html";
+/* ================= LOAD DASHBOARD ================= */
+async function loadDashboard() {
+  if (!checkAuth()) return;
+
+  showLoader("Loading dashboard..."); // show loader
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+  try {
+    const res = await fetch(API + "/api/me", { 
+      headers: { Authorization: "Bearer " + getToken() },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) throw new Error("Failed to fetch user - " + res.status);
+    
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Server returned non-JSON response");
+    }
+    
+    currentUser = await res.json();
+    window.CURRENT_USER_ID = currentUser.id;
+    console.log("Current user tier:", currentUser.user_tier);
+    
+  } catch (e) {
+    clearTimeout(timeout);
+    console.error("Load user error:", e);
+    hideLoader(); // close loader on error
+    logout();
+    return;
+  }
+
+  hideLoader(); // close loader on success
+
+  if (el("usernameDisplay")) el("usernameDisplay").innerText = "Hello " + currentUser.username;
+  if (el("companyBadge")) el("companyBadge").innerText = currentUser.company.toUpperCase();
+
+  if (currentUser && currentUser.is_admin === true) {
+    document.querySelectorAll(".adminOnly").forEach(e => e.style.display = "block");
+    if (el("adminWalletBalance")) el("adminWalletBalance").innerText = formatNaira(currentUser.admin_wallet);
+    if (el("adminWalletBalance2")) el("adminWalletBalance2").innerText = formatNaira(currentUser.admin_wallet);
+  }
+
+  initNavigation();
+  await loadAccount();
+  await loadPlans();
+  fetchTransactions();
+  if (currentUser.is_admin) loadAdminData();
+  checkBiometricStatus();
+
+  startWalletPolling(); // use polling instead of websocket
 }
 
 /* ================= START ================= */
