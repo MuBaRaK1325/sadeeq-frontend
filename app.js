@@ -380,9 +380,11 @@ function renderPlans() {
       badge = `<span class="regularUserBadge" style="position:absolute;top:8px;right:8px;background:#ffa000;padding:2px 6px;border-radius:4px;font-size:10px;">REGULAR</span>`;
     }
 
+    const validityText = p.validity ? `${p.validity} Days` : "";
+
     div.innerHTML = `
       <strong>${p.name}</strong> ${badge}<br>
-      ${p.validity || ""}<br>
+      ${validityText}<br>
       <strong>${formatNaira(priceDisplay)}</strong>
     `;
 
