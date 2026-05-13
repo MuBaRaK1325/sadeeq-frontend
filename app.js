@@ -1112,7 +1112,6 @@ async function setUserTier(id, tier) {
 /* ================= ADMIN: PLANS MANAGER ================= */
 
 let isModalOpen = false;
-let cachedAdminPlans = [];
 let editingPlanId = null;
 
 // Helper if you don't have it already
@@ -1127,7 +1126,7 @@ async function loadAdminPlans() {
     if (!res.ok) throw new Error("Failed to load plans");
     
     const plans = await res.json();
-    cachedAdminPlans = plans;
+    cachedAdminPlans = plans; // assigns to the global from top of app.js
     const list = el("adminPlansList");
     if (!list) return;
 
@@ -1151,7 +1150,6 @@ async function loadAdminPlans() {
       </div>`;
     }).join('');
 
-    // Use pointerdown for mobile compatibility
     document.querySelectorAll(".editPlanBtn").forEach(btn => {
       btn.addEventListener("pointerdown", (e) => {
         e.preventDefault();
@@ -1318,7 +1316,6 @@ async function savePlanEdit() {
   }
 }
 
-// Modal helpers - make sure these match your HTML IDs
 function openModal(id) {
   const modal = document.getElementById(id);
   if (modal) {
@@ -1337,7 +1334,6 @@ function closeModal(id) {
   isModalOpen = false;
 }
 
-// Attach button listeners for mobile compatibility
 document.addEventListener("DOMContentLoaded", () => {
   const saveBtn = document.getElementById("savePlanBtn");
   if (saveBtn) {
