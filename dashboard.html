@@ -671,17 +671,11 @@ padding:8px 16px;
 <strong id="walletBalance">₦0</strong>
 </div>
 
-<div class="adminWalletCard adminOnly">
-<p>Admin Profit Wallet</p>
-<strong id="adminWalletBalance">₦0</strong>
-<strong id="adminWalletBalance2" style="display:block;margin-top:5px;">₦0</strong>
-</div>
 
 <div class="quickActions">
 <div class="quickCard" onclick="showSection('buyData')">📶 Buy Data</div>
 <div class="quickCard" onclick="showSection('buyAirtime')">📞 Buy Airtime</div>
 <div class="quickCard" onclick="showSection('fund')">💰 Fund Wallet</div>
-<div class="quickCard adminOnly" onclick="showSection('profitDashboard')">📊 Profit</div>
 </div>
 
 <div id="transactionHistory"></div>
@@ -708,7 +702,6 @@ padding:8px 16px;
 <div class="networkItem" onclick="selectNetwork('MTN', this)"><img src="images/mtn.png" alt="MTN"></div>
 <div class="networkItem" onclick="selectNetwork('GLO', this)"><img src="images/glo.png" alt="GLO"></div>
 <div class="networkItem" onclick="selectNetwork('AIRTEL', this)"><img src="images/airtel.png" alt="AIRTEL"></div>
-<div class="networkItem" onclick="selectNetwork('9MOBILE', this)"><img src="images/9mobile.png" alt="9MOBILE"></div>
 </div>
 <input id="dataPhone" type="tel" placeholder="Phone Number">
 <div id="planList"></div>
@@ -722,7 +715,6 @@ padding:8px 16px;
 <div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('MTN', this)">MTN</div>
 <div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('GLO', this)">GLO</div>
 <div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('AIRTEL', this)">AIRTEL</div>
-<div class="networkItem airtimeNet" onclick="selectAirtimeNetwork('9MOBILE', this)">9MOBILE</div>
 </div>
 <input id="airtimePhone" type="tel" placeholder="Phone Number">
 <input id="airtimeAmount" type="number" placeholder="Amount">
@@ -786,13 +778,7 @@ padding:8px 16px;
   </div>
 </section>
 
-<!-- ADMIN: WITHDRAWALS -->
-<section id="withdrawals" class="section adminOnly">
-  <button onclick="showSection('profile')" class="backBtn">⬅ Back</button>
-  <h3>💸 Withdrawals</h3>
-  <div class="adminSection">
-    <div id="withdrawalsList"></div>
-  </div>
+
 </section>
 
 <!-- PROFILE -->
@@ -813,10 +799,8 @@ padding:8px 16px;
 <!-- ADMIN PANEL -->
 <div class="adminOnly">
 <h3>Admin Tools</h3>
-<button onclick="showSection('profitDashboard')">📊 Profit Dashboard</button>
 <button onclick="showSection('plansManager')">📱 Plans Manager</button>
 <button onclick="showSection('usersManager')">👥 Users Manager</button>
-<button onclick="showSection('withdrawals')">💸 Withdrawals</button>
 <button onclick="showSection('transactionsManager'); loadAdminTransactions();" class="adminNavBtn">🧾 Transactions</button>
 <hr>
 <h3>Transaction Reversal</h3>
