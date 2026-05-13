@@ -516,8 +516,7 @@ padding:8px 16px;
     <option value="9MOBILE">9MOBILE</option>
   </select>
   <input id="newPlanName" placeholder="Plan Name e.g 1GB SME" />
-  <input id="newPlanPrice" type="number" step="0.01" placeholder="Default Price" />
-  <input id="newPlanUserPrice" type="number" step="0.01" placeholder="Regular User Price" />
+  <input id="newPlanPrice" type="number" step="0.01" placeholder="Selling Price" />
   <input id="newPlanTopPrice" type="number" step="0.01" placeholder="Top User Price" />
   <input id="newPlanCost" type="number" step="0.01" placeholder="Your Cost" />
   <input id="newPlanValidity" placeholder="Validity e.g 30 Days" />
@@ -549,8 +548,7 @@ padding:8px 16px;
     <option value="9MOBILE">9MOBILE</option>
   </select>
   <input id="editPlanName" placeholder="Plan Name" />
-  <input id="editPlanPrice" type="number" step="0.01" placeholder="Default Price" />
-  <input id="editPlanUserPrice" type="number" step="0.01" placeholder="Regular User Price" />
+  <input id="editPlanPrice" type="number" step="0.01" placeholder="Selling Price" />
   <input id="editPlanTopPrice" type="number" step="0.01" placeholder="Top User Price" />
   <input id="editPlanCost" type="number" step="0.01" placeholder="Your Cost" />
   <input id="editPlanValidity" placeholder="Validity" />
@@ -565,7 +563,7 @@ padding:8px 16px;
   <label><input id="editPlanRestricted" type="checkbox"> Restricted to my company</label>
   <label><input id="editPlanActive" type="checkbox"> Active</label>
   <div style="display:flex;gap:10px;margin-top:15px;">
-    <button id="savePlanBtn" class="successBtn">Update Plan</button>
+    <button onclick="savePlanEdit()" class="successBtn">Update Plan</button>
     <button onclick="closeModal('editPlanModal')" class="dangerBtn">Cancel</button>
   </div>
 </div>
