@@ -1119,16 +1119,21 @@ async function loadAdminPlans() {
     if (list) {
       list.innerHTML = "";
       plans.forEach(p => {
-        const statusColor = p.is_active? "#00c853" : "#ff4d4d";
-        const restrictBadge = p.restricted? `<span class="badge badgeWarning">RESTRICTED</span>` : '';
-        const providerBadge = p.provider? `<span class="badge">${p.provider.toUpperCase()}</span>` : '';
+        const statusColor = p.is_active ? "#00c853" : "#ff4d4d";
+        const restrictBadge = p.restricted ? `<span class="badge badgeWarning">RESTRICTED</span>` : '';
+        const providerBadge = p.provider ? `<span class="badge">${p.provider.toUpperCase()}</span>` : '';
+        
+        const defaultDisplay = p.default_price != null && p.default_price !== '' ? formatNaira(p.default_price) : formatNaira(p.price);
+        const regularDisplay = p.regular_price != null && p.regular_price !== '' ? formatNaira(p.regular_price) : '-';
+        const topDisplay = p.top_price != null && p.top_price !== '' ? formatNaira(p.top_price) : '-';
+        
         list.innerHTML += `<div class="planCard">
           <strong>${p.name}</strong> - ${p.network} ${restrictBadge} ${providerBadge}<br>
-          Default: ${formatNaira(p.price)} | Regular: ${formatNaira(p.regular_price || p.price)} | Top: ${formatNaira(p.top_price || p.price)} | Cost: ${formatNaira(p.cost)}<br>
+          Default: ${defaultDisplay} | Regular: ${regularDisplay} | Top: ${topDisplay} | Cost: ${formatNaira(p.cost)}<br>
           Provider: ${p.provider || 'N/A'} | Net ID: ${p.network_id || 'N/A'} | API ID: ${p.api_plan_id || 'N/A'}<br>
-          <span style="color:${statusColor}">${p.is_active? 'Active' : 'Disabled'}</span>
+          <span style="color:${statusColor}">${p.is_active ? 'Active' : 'Disabled'}</span>
           <button onclick="editPlan(${p.id})" class="primaryBtn">Edit</button>
-          <button onclick="togglePlan(${p.id}, ${!p.is_active})" class="dangerBtn">${p.is_active? 'Disable' : 'Enable'}</button>
+          <button onclick="togglePlan(${p.id}, ${!p.is_active})" class="dangerBtn">${p.is_active ? 'Disable' : 'Enable'}</button>
         </div>`;
       });
     }
@@ -1143,6 +1148,7 @@ async function addPlan() {
     network: el("newPlanNetwork")?.value,
     name: el("newPlanName")?.value,
     price: el("newPlanPrice")?.value,
+    default_price: el("newPlanDefaultPrice")?.value || null,
     regular_price: el("newPlanRegularPrice")?.value || null,
     top_price: el("newPlanTopPrice")?.value || null,
     cost: el("newPlanCost")?.value,
@@ -1153,7 +1159,7 @@ async function addPlan() {
     api_plan_id: el("newPlanApiId")?.value
   };
 
-  if (!plan.plan_id ||!plan.network ||!plan.name ||!plan.price ||!plan.cost ||!plan.provider ||!plan.network_id ||!plan.api_plan_id) {
+  if (!plan.plan_id || !plan.network || !plan.name || !plan.price || !plan.cost || !plan.provider || !plan.network_id || !plan.api_plan_id) {
     return showMsg("Fill all required fields including provider details", "error");
   }
 
@@ -1166,7 +1172,7 @@ async function addPlan() {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) {
       loadAdminPlans();
       loadPlans();
@@ -1188,7 +1194,7 @@ async function togglePlan(id, is_active) {
     });
     const data = await res.json();
     hideLoader();
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) {
       loadAdminPlans();
       loadPlans();
@@ -1208,6 +1214,7 @@ async function editPlan(id) {
 
   if (el("editPlanName")) el("editPlanName").value = plan.name || "";
   if (el("editPlanPrice")) el("editPlanPrice").value = plan.price || "";
+  if (el("editPlanDefaultPrice")) el("editPlanDefaultPrice").value = plan.default_price || "";
   if (el("editPlanRegularPrice")) el("editPlanRegularPrice").value = plan.regular_price || "";
   if (el("editPlanTopPrice")) el("editPlanTopPrice").value = plan.top_price || "";
   if (el("editPlanCost")) el("editPlanCost").value = plan.cost || "";
@@ -1216,7 +1223,7 @@ async function editPlan(id) {
   if (el("editPlanProvider")) el("editPlanProvider").value = plan.provider || "";
   if (el("editPlanNetworkId")) el("editPlanNetworkId").value = plan.network_id || "";
   if (el("editPlanApiId")) el("editPlanApiId").value = plan.api_plan_id || "";
-  if (el("editPlanActive")) el("editPlanActive").checked = plan.is_active!== false;
+  if (el("editPlanActive")) el("editPlanActive").checked = plan.is_active !== false;
 
   openModal("editPlanModal");
 }
@@ -1227,6 +1234,7 @@ async function savePlanEdit() {
   const updated = {
     name: el("editPlanName")?.value,
     price: el("editPlanPrice")?.value,
+    default_price: el("editPlanDefaultPrice")?.value || null,
     regular_price: el("editPlanRegularPrice")?.value || null,
     top_price: el("editPlanTopPrice")?.value || null,
     cost: el("editPlanCost")?.value,
@@ -1238,7 +1246,7 @@ async function savePlanEdit() {
     is_active: el("editPlanActive")?.checked
   };
 
-  if (!updated.name ||!updated.price ||!updated.cost ||!updated.provider ||!updated.network_id ||!updated.api_plan_id) {
+  if (!updated.name || !updated.price || !updated.cost || !updated.provider || !updated.network_id || !updated.api_plan_id) {
     return showMsg("Name, Price, Cost, Provider, Network ID and API Plan ID are required", "error");
   }
 
@@ -1252,7 +1260,7 @@ async function savePlanEdit() {
     const data = await res.json();
     hideLoader();
     closeModal("editPlanModal");
-    showMsg(data.message, res.ok? "success" : "error");
+    showMsg(data.message, res.ok ? "success" : "error");
     if (res.ok) {
       loadAdminPlans();
       loadPlans();
