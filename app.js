@@ -77,12 +77,14 @@ function showInputModal(title, placeholder, callback) {
   };
 }
 
-/* ================= LOADER ================= */
+/* ================= LOADER - FIXED TO NOT CONFLICT ================= */
 function showLoader(text = "Processing...") {
-  el("msgBox").innerHTML = `<p style="text-align:center">${text}</p>`;
-  openModal("msgModal");
+  if (el("loaderText")) el("loaderText").innerText = text;
+  openModal("loaderModal");
 }
-function hideLoader() { closeModal("msgModal"); }
+function hideLoader() { 
+  closeModal("loaderModal"); 
+}
 
 /* ================= AUTH ================= */
 function checkAuth() {
@@ -96,6 +98,8 @@ function checkAuth() {
 /* ================= LOAD DASHBOARD ================= */
 async function loadDashboard() {
   if (!checkAuth()) return;
+
+  initKycListeners(); // ADD THIS LINE RIGHT HERE
 
   try {
     const res = await fetch(API + "/api/me", { headers: { Authorization: "Bearer " + getToken() } });
@@ -830,7 +834,47 @@ async function buyAirtime(pin) {
   }
 }
 
-/* ================= FUND ================= */
+/* ================= LOADER - FIXED TO NOT CONFLICT ================= */
+function showLoader(text = "Processing...") {
+  if (el("loaderText")) el("loaderText").innerText = text;
+  openModal("loaderModal");
+}
+function hideLoader() { 
+  closeModal("loaderModal"); 
+}
+
+/* ================= KYC MODAL HANDLERS ================= */
+function openKycModal() {
+  el("kycModal").style.display = "flex";
+}
+
+function closeKycModal() {
+  el("kycModal").style.display = "none";
+  el("idNumberInput").value = '';
+  el("idError").style.display = 'none';
+}
+
+function initKycListeners() {
+  if (!el('idTypeSelect')) return;
+
+  el('idTypeSelect').addEventListener('change', () => {
+    const idType = el('idTypeSelect').value;
+    el('idNumberInput').placeholder = idType === 'bvn' ? 'Enter 11-digit BVN' : 'Enter 11-digit NIN';
+    el('idNumberInput').value = '';
+    el('idError').style.display = 'none';
+  });
+
+  el('idNumberInput').addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+    if (e.target.value.length === 11) el('idError').style.display = 'none';
+  });
+
+  el('submitKycBtn').addEventListener('click', submitKycAndGenerate);
+}
+
+/* ================= FUND WALLET WITH KYC ================= */
+let pendingFundAmount = 0;
+
 function openFundModal() {
   el("msgBox").innerHTML = `
     <div style="text-align:center">
@@ -846,25 +890,88 @@ async function confirmFund() {
   const amount = Number(el("fundAmount")?.value);
   if (!amount || amount < 100) return showMsg("Minimum funding is ₦100", "error");
 
-  showLoader("Generating account details...");
+  pendingFundAmount = amount;
+
+  showLoader("Checking account...");
   try {
-    const res = await fetch(API + "/api/fund/init", {
+    const res = await fetch(API + "/api/wallet/create-dva", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
-      body: JSON.stringify({ amount })
+      body: JSON.stringify({})
     });
     const data = await res.json();
     hideLoader();
 
-    if (data.account_number) {
-      // PaymentPoint bank transfer for all companies
-      showPaymentPointDetails(data, amount);
-    } else {
-      showMsg(data.message || "Failed to generate account", "error");
+    console.log('DVA Response:', data);
+
+    // FIXED: Check requireKyc explicitly first
+    if (data.requireKyc === true) {
+      closeModal('msgModal');
+      openKycModal();
+      return;
     }
-  } catch {
+
+    // Account exists or was just created
+    if (res.ok && data.success && (data.account_number || data.account?.account_number)) {
+      const acc = data.account_number ? data : data.account;
+      showPaymentPointDetails(acc, amount);
+    } else {
+      showMsg(data.error || data.message || "Failed to generate account", "error");
+    }
+  } catch (err) {
     hideLoader();
+    console.error("DVA Error:", err);
     showMsg("Server error", "error");
+  }
+}
+
+// Submit from KYC modal
+async function submitKycAndGenerate() {
+  const idType = el('idTypeSelect').value;
+  const idNumber = el('idNumberInput').value;
+  const idError = el('idError');
+
+  if (idNumber.length !== 11) {
+    idError.textContent = `${idType.toUpperCase()} must be exactly 11 digits`;
+    idError.style.display = 'block';
+    return;
+  }
+
+  const body = {};
+  body[idType] = idNumber;
+
+  showLoader("Verifying & generating account...");
+  try {
+    const res = await fetch(API + "/api/wallet/create-dva", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    hideLoader();
+
+    if (data.success && data.account_number) {
+      closeKycModal();
+      // If funding flow, show payment details. If DVA generation flow, just refresh.
+      if (pendingFundAmount > 0) {
+        showPaymentPointDetails(data, pendingFundAmount);
+        pendingFundAmount = 0;
+      } else {
+        showMsg("Account generated successfully!", "success");
+      }
+      await loadAccount();
+    } else if (data.requireKyc === true) {
+      // KYC still required - keep modal open
+      idError.textContent = data.message || "Verification failed. Check your BVN/NIN";
+      idError.style.display = 'block';
+    } else {
+      idError.textContent = data.error || data.message || "Verification failed";
+      idError.style.display = 'block';
+    }
+  } catch (err) {
+    hideLoader();
+    idError.textContent = 'Network error. Try again.';
+    idError.style.display = 'block';
   }
 }
 
@@ -892,11 +999,48 @@ function showPaymentPointDetails(data, amount) {
         </div>
       </div>
 
-      <small style="color:#ffa000">Reference: ${data.reference}</small>
+      <small style="color:#ffa000">Reference: ${data.reference || 'N/A'}</small>
       <br><br>
       <button onclick="closeModal('msgModal')" class="secondaryBtn">Done</button>
     </div>`;
   openModal("msgModal");
+}
+
+/* ================= DVA GENERATION - CORRECTED ================= */
+async function generateDVA() {
+  showLoader("Creating your PaymentPoint account...");
+  try {
+    const res = await fetch(API + "/api/wallet/create-dva", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    hideLoader();
+
+    console.log('DVA Response:', data);
+
+    // Check requireKyc explicitly - this must come first
+    if (data.requireKyc === true) {
+      openKycModal();
+      return;
+    }
+
+    // Success case
+    if (res.ok && data.success && data.account_number) {
+      showMsg("Virtual account created successfully", "success");
+      await loadAccount();
+      return;
+    }
+
+    // All other errors - show message, don't open modal
+    showMsg(data.message || data.error || "Failed to create account", "error");
+
+  } catch (err) {
+    hideLoader();
+    console.error("DVA Error:", err);
+    showMsg("Server error", "error");
+  }
 }
 
 
