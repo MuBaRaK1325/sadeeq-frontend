@@ -751,9 +751,10 @@ async function openPurchaseModal(planId, planName, planPrice) {
       headers: { 'Authorization': 'Bearer ' + getToken() }
     });
     const data = await res.json();
-    if (bioBtn) bioBtn.style.display = data.enabled? 'inline-block' : 'none';
+    if (bioBtn) bioBtn.style.display = data.enabled ? 'flex' : 'none';
   } catch (e) {
     console.log('Biometric check failed:', e);
+    if (bioBtn) bioBtn.style.display = 'none';
   }
 
   openModal('pinModal');
@@ -779,7 +780,7 @@ function openAirtimePin() {
     headers: { 'Authorization': 'Bearer ' + getToken() }
   }).then(r => r.json()).then(data => {
     const bioBtn = el('biometricPurchaseBtn');
-    if (bioBtn) bioBtn.style.display = data.enabled? 'inline-block' : 'none';
+    if (bioBtn) bioBtn.style.display = data.enabled ? 'flex' : 'none';
   }).catch(() => {});
 
   openModal('pinModal');
@@ -809,9 +810,11 @@ async function purchaseWithBiometric() {
 
     hideLoader();
 
+    if (!start || start.error) throw new Error(start.error || 'Failed to start verification');
+
     start.challenge = bufferDecode(start.challenge);
-    start.allowCredentials = start.allowCredentials.map(cred => ({
-    ...cred,
+    start.allowCredentials = (start.allowCredentials || []).map(cred => ({
+      ...cred,
       id: bufferDecode(cred.id)
     }));
 
@@ -824,7 +827,7 @@ async function purchaseWithBiometric() {
         authenticatorData: bufferEncode(assertion.response.authenticatorData),
         clientDataJSON: bufferEncode(assertion.response.clientDataJSON),
         signature: bufferEncode(assertion.response.signature),
-        userHandle: assertion.response.userHandle? bufferEncode(assertion.response.userHandle) : null
+        userHandle: assertion.response.userHandle ? bufferEncode(assertion.response.userHandle) : null
       },
       type: assertion.type
     };
