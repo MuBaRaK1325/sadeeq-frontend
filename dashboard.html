@@ -550,7 +550,7 @@ padding:8px 16px;
     <option value="maitama">Maitama</option>
     <option value="cheapdatahub">CheapDataHub</option>
     <option value="subpadi">SubPadi</option>
-    <option value="alrahuz">AlRahuz</option>
+    <option value="arrahuz">ARRahuz</option>
   </select>
   <input id="newPlanNetworkId" placeholder="Network ID: 1=MTN, 2=Airtel, 3=Glo, 4=9mobile" />
   <input id="newPlanApiId" placeholder="API Plan ID from provider dashboard" />
@@ -585,7 +585,7 @@ padding:8px 16px;
     <option value="maitama">Maitama</option>
     <option value="cheapdatahub">CheapDataHub</option>
     <option value="subpadi">SubPadi</option>
-    <option value="alrahuz">AlRahuz</option>
+    <option value="arrahuz">ARRahuz</option>
   </select>
   <input id="editPlanNetworkId" placeholder="Network ID" />
   <input id="editPlanApiId" placeholder="API Plan ID" />
@@ -651,6 +651,20 @@ padding:8px 16px;
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px;">
             <span style="color:rgba(187,247,208,0.9); font-size:13px; font-weight:500; flex-shrink:0;">Date & Time</span>
             <span id="receiptDate" style="color:white; font-size:13px; text-align:right;"></span>
+          </div>
+          
+          <!-- Balance Before -->
+          <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:14px 0;"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px;">
+            <span style="color:rgba(187,247,208,0.9); font-size:13px; font-weight:500; flex-shrink:0;">Balance Before</span>
+            <span id="receiptBalanceBefore" style="color:#facc15; font-size:13px; font-weight:600; text-align:right;">-</span>
+          </div>
+          
+          <!-- Balance After -->
+          <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:14px 0;"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px;">
+            <span style="color:rgba(187,247,208,0.9); font-size:13px; font-weight:500; flex-shrink:0;">Balance After</span>
+            <span id="receiptBalanceAfter" style="color:#4ade80; font-size:13px; font-weight:600; text-align:right;">-</span>
           </div>
           
           <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(22,163,74,0.3), transparent); margin:14px 0;"></div>
@@ -1150,14 +1164,34 @@ let currentTxnId = '';
 function showReceipt(data) {
   document.getElementById('receiptNumber').textContent = data.number || 'N/A';
   document.getElementById('receiptNetwork').textContent = data.network || 'N/A';
-  document.getElementById('receiptPlan').textContent = data.plan_name || data.plan || data.type || 'N/A';
-  document.getElementById('receiptDate').textContent = data.date || data.created_at || new Date().toISOString();
+  document.getElementById('receiptPlan').textContent = data.plan || data.type || 'N/A';
+  document.getElementById('receiptDate').textContent = data.date;
   
-  // Fix NaN by using amount with fallback
+  // Safe amount formatting - supports both amount and price
   const amount = Number(data.amount || data.price || 0);
   document.getElementById('receiptPrice').textContent = '₦' + amount.toLocaleString();
   
-  currentTxnId = data.txnId || data.id || data.reference || 'SQD' + Date.now().toString().slice(-8);
+  // Balance Before and Balance After - supports both snake_case and camelCase
+  const balBeforeEl = document.getElementById('receiptBalanceBefore');
+  const balAfterEl = document.getElementById('receiptBalanceAfter');
+  
+  if (balBeforeEl) {
+    const balBefore = data.balance_before != null ? Number(data.balance_before) 
+                     : data.balanceBefore != null ? Number(data.balanceBefore) : null;
+    balBeforeEl.textContent = balBefore != null 
+      ? '₦' + balBefore.toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) 
+      : '-';
+  }
+  
+  if (balAfterEl) {
+    const balAfter = data.balance_after != null ? Number(data.balance_after) 
+                    : data.balanceAfter != null ? Number(data.balanceAfter) : null;
+    balAfterEl.textContent = balAfter != null 
+      ? '₦' + balAfter.toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) 
+      : '-';
+  }
+  
+  currentTxnId = data.txnId || data.id || 'TVS' + Date.now().toString().slice(-8);
   document.getElementById('txnId').textContent = 'Transaction ID: ' + currentTxnId;
 
   const statusColors = {
@@ -1196,7 +1230,7 @@ async function downloadReceipt() {
     logging: false
   });
   const link = document.createElement('a');
-  link.download = `Sadeeq-Receipt-${document.getElementById('receiptNumber').textContent}.png`;
+  link.download = `Teeversh-Receipt-${document.getElementById('receiptNumber').textContent}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
@@ -1210,12 +1244,12 @@ async function shareReceipt() {
     logging: false
   });
   canvas.toBlob(async (blob) => {
-    const file = new File([blob], 'sadeeq-receipt.png', {type: 'image/png'});
+    const file = new File([blob], 'teeversh-receipt.png', {type: 'image/png'});
     if (navigator.share && navigator.canShare && navigator.canShare({files: [file]})) {
       try {
         await navigator.share({
           files: [file],
-          title: 'Sadeeq Receipt',
+          title: 'Teeversh Receipt',
           text: `Transaction ${document.getElementById('receiptPrice').textContent} - ${document.getElementById('receiptNumber').textContent}`
         });
       } catch(e) {
@@ -1230,6 +1264,24 @@ async function shareReceipt() {
 document.getElementById('receiptModal').addEventListener('click', function(e) {
   if (e.target === this) closeReceipt();
 });
+
+// Show message modal helper
+function showMsg(msg, isError = false){
+  const box = document.getElementById('msgBox');
+  box.innerHTML = `<p style="margin-bottom:16px;color:${isError ? '#ff4d4d' : 'white'}">${msg}</p><button onclick="closeModal('msgModal')" class="primaryBtn">OK</button>`;
+  document.getElementById('msgModal').style.display = 'flex';
+}
+
+// Show confirm modal helper
+function showConfirm(title, msg, onYes){
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmYes').onclick = () => {
+    closeModal('confirmModal');
+    onYes();
+  };
+  document.getElementById('confirmModal').style.display = 'flex';
+}
 </script>
 
 <script src="app.js?v=2.3.2"></script>

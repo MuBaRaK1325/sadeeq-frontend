@@ -191,36 +191,59 @@ async function loadWallet() {
     }
   }
 
-  // --- RENDER TRANSACTIONS ---
-  const list = el("walletTransactionsList");
-  const transactions = wallet.transactions || [];
-  if (list) {
-    if (!transactions.length) {
-      list.innerHTML = `<p style="opacity:0.6;text-align:center;">No wallet transactions yet</p>`;
-      return;
-    }
-    list.innerHTML = "";
-    transactions.forEach(tx => {
-      const statusColor = tx.tx_status === "SUCCESS" ? "#00c853" : tx.tx_status === "PENDING" ? "#ffa000" : "#ff4d4d";
-      const wasManual = tx.metadata?.manual_deducted ? '<span class="badge badgeWarning">MANUAL</span>' : '';
-      const wasReversed = tx.metadata?.reversed ? '<span class="badge badgeDanger">REVERSED</span>' : '';
-
-      list.innerHTML += `
-        <div class="transactionCard">
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-            <div>
-              <strong>${tx.type || 'Wallet Tx'}</strong> ${wasManual} ${wasReversed}<br>
-              <small style="font-family:monospace">${tx.reference || 'N/A'}</small>
-            </div>
-            <div style="text-align:right">
-              <strong style="font-size:18px">${formatNaira(tx.amount || 0)}</strong><br>
-              <span style="color:${statusColor};font-weight:600">${tx.tx_status || tx.type.toUpperCase()}</span>
-            </div>
-          </div>
-          <small style="opacity:0.5">${formatDate(tx.created_at)}</small>
-        </div>`;
-    });
+// --- RENDER TRANSACTIONS ---
+const list = el("walletTransactionsList");
+const transactions = wallet.transactions || [];
+if (list) {
+  if (!transactions.length) {
+    list.innerHTML = `<p style="opacity:0.6;text-align:center;">No wallet transactions yet</p>`;
+    return;
   }
+  list.innerHTML = "";
+  
+  transactions.forEach(tx => {
+    const statusColor = tx.tx_status === "SUCCESS" ? "#00c853" : tx.tx_status === "PENDING" ? "#ffa000" : "#ff4d4d";
+    const wasManual = tx.metadata?.manual_deducted ? '<span class="badge badgeWarning">MANUAL</span>' : '';
+    const wasReversed = tx.metadata?.reversed ? '<span class="badge badgeDanger">REVERSED</span>' : '';
+
+    // Save full tx object in data attribute, escape single quotes
+    const txData = JSON.stringify(tx).replace(/'/g, "&#39;");
+
+    list.innerHTML += `
+      <div class="transactionCard" style="cursor:pointer" data-tx='${txData}'>
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+          <div>
+            <strong>${tx.type || 'Wallet Tx'}</strong> ${wasManual} ${wasReversed}<br>
+            <small style="font-family:monospace">${tx.reference || 'N/A'}</small>
+          </div>
+          <div style="text-align:right">
+            <strong style="font-size:18px">${formatNaira(tx.amount || 0)}</strong><br>
+            <span style="color:${statusColor};font-weight:600">${tx.tx_status || tx.type.toUpperCase()}</span>
+          </div>
+        </div>
+        <small style="opacity:0.5">${formatDate(tx.created_at)}</small>
+      </div>`;
+  });
+
+  // Add click event to all cards after rendering
+  document.querySelectorAll('.transactionCard').forEach(card => {
+    card.addEventListener('click', () => {
+      const tx = JSON.parse(card.dataset.tx);
+      showReceipt({
+        number: tx.reference,
+        network: tx.network,
+        plan: tx.plan_name,
+        type: tx.type,
+        date: formatDate(tx.created_at),
+        amount: tx.amount,
+        status: tx.tx_status,
+        id: tx.id,
+        balance_before: tx.balance_before, // ← Yanzu zai fito
+        balance_after: tx.balance_after    // ← Yanzu zai fito
+      });
+    });
+  });
+}
 }
 
 // Helper for copy button
@@ -259,10 +282,12 @@ async function fetchTransactions() {
           plan: t.plan_name || t.type,
           type: t.type,
           date: new Date(t.created_at).toLocaleString(),
-          price: t.amount,
+          amount: t.amount, // ← Sauya price → amount
           status: t.status,
           txnId: t.reference,
-          id: t.id
+          id: t.id,
+          balance_before: t.balance_before, // ← snake_case
+          balance_after: t.balance_after    // ← snake_case
         });
         el("transactionHistory").appendChild(card);
       });
@@ -278,10 +303,12 @@ async function fetchTransactions() {
           plan: t.plan_name || t.type,
           type: t.type,
           date: new Date(t.created_at).toLocaleString(),
-          price: t.amount,
+          amount: t.amount, // ← Sauya price → amount
           status: t.status,
           txnId: t.reference,
-          id: t.id
+          id: t.id,
+          balance_before: t.balance_before, // ← snake_case
+          balance_after: t.balance_after    // ← snake_case
         });
         el("allTransactions").appendChild(card);
       });
