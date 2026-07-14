@@ -1001,8 +1001,10 @@ padding:8px 16px;
 <section id="transactionsManager" class="section adminOnly">
 <button onclick="showSection('profile')" class="backBtn">⬅ Back</button>
 <h3>🧾 Transaction Manager</h3>
-<p style="opacity:0.7;margin-bottom:15px">Handle failed transactions and process manual deductions or refunds</p>
+<p style="opacity:0.7;margin-bottom:15px">Handle all transactions - success, failed, pending. Process manual approvals or refunds with full provider response tracking.</p>
+
 <div class="adminSection">
+  <!-- Filters -->
   <div class="filtersRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
     <select id="txStatusFilter" onchange="loadAdminTransactions()" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);min-width:140px">
       <option value="">All Status</option>
@@ -1011,15 +1013,144 @@ padding:8px 16px;
       <option value="PENDING">Pending</option>
       <option value="REVERSED">Reversed</option>
     </select>
-    <input id="txSearch" type="text" placeholder="Search reference or email" 
-           onkeyup="loadAdminTransactions()" 
+
+    <select id="txProviderFilter" onchange="loadAdminTransactions()" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);min-width:140px">
+      <option value="">All Providers</option>
+      <option value="maitama">Maitama</option>
+      <option value="cheapdatahub">CheapDataHub</option>
+      <option value="subpadi">SubPadi</option>
+      <option value="arrahuz">Arrahuz</option>
+      <option value="monnify">Monnify</option>
+      <option value="flutterwave">Flutterwave</option>
+    </select>
+
+    <input id="txSearch" type="text" placeholder="Search reference, phone, username, email..." 
+           onkeyup="if(event.key==='Enter') loadAdminTransactions()" 
            style="flex:1;min-width:200px;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" />
-    <button onclick="loadAdminTransactions()" class="primaryBtn">Refresh</button>
+    
+    <button onclick="loadAdminTransactions()" class="primaryBtn">🔍 Search</button>
+    <button onclick="document.getElementById('txStatusFilter').value='';document.getElementById('txProviderFilter').value='';document.getElementById('txSearch').value='';loadAdminTransactions()" class="secondaryBtn">Reset</button>
   </div>
+
+  <!-- Status Legend -->
+  <div style="display:flex;gap:12px;margin-bottom:16px;font-size:11px;flex-wrap:wrap;opacity:0.9">
+    <div><span class="badge" style="background:#00c853;color:white;padding:2px 8px;border-radius:4px">SUCCESS</span> Delivered</div>
+    <div><span class="badge" style="background:#ff6b00;color:white;padding:2px 8px;border-radius:4px">FAILED</span> Provider rejected</div>
+    <div><span class="badge" style="background:#ffa000;color:white;padding:2px 8px;border-radius:4px">PENDING</span> Processing</div>
+    <div><span class="badge" style="background:#2196f3;color:white;padding:2px 8px;border-radius:4px">MANUAL</span> Admin approved</div>
+    <div><span class="badge" style="background:#ff4d4d;color:white;padding:2px 8px;border-radius:4px">REVERSED</span> Refunded</div>
+  </div>
+
+  <!-- Transactions List -->
   <div id="transactionsList" class="transactionsGrid" style="display:flex;flex-direction:column;gap:12px">
     <p style="text-align:center;opacity:0.6">Loading transactions...</p>
   </div>
 </div>
+
+<style>
+.transactionCard {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.transactionCard:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border-color: var(--primary);
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.badgeInfo { background: #2196f3; color: white; }
+.badgeWarning { background: #ff6b00; color: white; }
+.badgeDanger { background: #ff4d4d; color: white; }
+
+.warningBtn {
+  background: #ff6b00;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.warningBtn:hover { background: #e65100; }
+
+.dangerBtn {
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.dangerBtn:hover { background: #e53935; }
+
+.infoBtn {
+  background: #21f380;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.infoBtn:hover { background: #19d294; }
+
+.primaryBtn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.primaryBtn:hover { opacity: 0.9; }
+
+.secondaryBtn {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover { background: var(--border); }
+
+details summary {
+  outline: none;
+  user-select: none;
+}
+
+details pre {
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 11px;
+  background: rgba(0,0,0,0.05);
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+</style>
 </section>
 
 <!-- ADMIN: PLANS MANAGER -->
