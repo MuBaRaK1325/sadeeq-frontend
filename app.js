@@ -1201,7 +1201,6 @@ async function loadAdminTransactions() {
       return;
     }
 
-    // Removed provider param - backend doesn't use it
     const url = `${API}/admin/wallet/transactions?status=${encodeURIComponent(status)}&search=${encodeURIComponent(search)}&t=${Date.now()}`;
     console.log("[ADMIN TX] Fetching:", url);
     
@@ -1227,48 +1226,87 @@ async function loadAdminTransactions() {
     }
 
     transactions.forEach(tx => {
-      const isManual = tx.metadata?.manual_deducted;
-      const isReversed = tx.metadata?.reversed;
+      const isManual = tx.metadata?.manual_approved || tx.metadata?.manual_deducted;
+      const isReversed = tx.status === 'REVERSED' || tx.metadata?.reversed;
+      const isFailed = tx.status === 'FAILED';
+      const isPending = tx.status === 'PENDING';
+      const isSuccess = tx.status === 'SUCCESS';
       
-      // Determine display status from type and metadata
-      let displayStatus = tx.type === 'credit' ? 'CREDIT' : 'DEBIT';
-      let statusColor = tx.type === 'credit' ? "#00c853" : "#ff4d4d";
+      // Status color da label
+      let statusColor = "#ff4d4d";
+      let statusLabel = tx.status;
+      
+      if (isSuccess) {
+        statusColor = "#00c853";
+      } else if (isFailed) {
+        statusColor = "#ff6b00";
+        statusLabel = "FAILED";
+      } else if (isPending) {
+        statusColor = "#ffa000";
+        statusLabel = "PENDING";
+      } else if (isReversed) {
+        statusColor = "#ff4d4d";
+        statusLabel = "REVERSED";
+      }
       
       if (isManual) {
-        displayStatus = "MANUAL DEDUCT";
-        statusColor = "#ffa000";
-      }
-      if (isReversed) {
-        displayStatus = "REVERSED";
-        statusColor = "#ff4d4d";
+        statusColor = "#2196f3";
+        statusLabel = "MANUAL APPROVED";
       }
 
-      const wasManual = isManual ? '<span class="badge badgeWarning">MANUAL</span>' : '';
+      // Type display
+      const displayType = tx.display_type || (tx.type === 'WALLET_FUND' || tx.type === 'REFUND' ? 'CREDIT' : 'DEBIT');
+      const typeColor = tx.display_color || (displayType === 'CREDIT' ? "#00c853" : "#ff4d4d");
+
+      const wasManual = isManual ? '<span class="badge badgeInfo">MANUAL</span>' : '';
       const wasReversed = isReversed ? '<span class="badge badgeDanger">REVERSED</span>' : '';
+      const isFailBadge = isFailed ? '<span class="badge badgeWarning">FAILED</span>' : '';
+      const isPendingBadge = isPending ? '<span class="badge badgeWarning">PENDING</span>' : '';
+
+      // Response message display
+      const responseMsgHtml = tx.response_msg ? 
+        `<div style="margin-top:8px;padding:8px;background:#f5f5f5;border-radius:4px;font-size:12px">
+          <strong>Provider Response:</strong> ${tx.response_msg}
+        </div>` : '';
+
+      // API response preview - don debug
+      const apiResponseHtml = tx.api_response && isFailed ? 
+        `<details style="margin-top:8px;font-size:11px">
+          <summary style="cursor:pointer;opacity:0.7">View API Response</summary>
+          <pre style="background:#f5f5f5;padding:8px;border-radius:4px;overflow-x:auto;margin-top:4px">${JSON.stringify(tx.api_response, null, 2)}</pre>
+        </details>` : '';
 
       list.innerHTML += `
         <div class="transactionCard">
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-            <div>
-              <strong>${tx.type || 'Transaction'}</strong> ${wasManual} ${wasReversed}<br>
+            <div style="flex:1">
+              <strong>${tx.type || 'Transaction'} - ${tx.plan_name || tx.network || ''}</strong> 
+              ${wasManual} ${wasReversed} ${isFailBadge} ${isPendingBadge}<br>
               <small style="opacity:0.7">${tx.username || 'N/A'} - ${tx.email || 'N/A'}</small><br>
-              <small style="font-family:monospace">${tx.reference || 'N/A'}</small>
+              <small style="font-family:monospace">${tx.reference || 'N/A'}</small><br>
+              ${tx.phone ? `<small style="opacity:0.7">Phone: ${tx.phone}</small><br>` : ''}
+              ${tx.provider ? `<small style="opacity:0.7">Provider: ${tx.provider}</small>` : ''}
             </div>
             <div style="text-align:right">
-              <strong style="font-size:18px">${formatNaira(tx.amount || 0)}</strong><br>
-              <span style="color:${statusColor};font-weight:600">${displayStatus}</span><br>
-              <small style="opacity:0.6">${tx.admin_email || 'System'}</small>
+              <strong style="font-size:18px;color:${typeColor}">${displayType === 'CREDIT' ? '+' : '-'}${formatNaira(tx.amount || 0)}</strong><br>
+              <span style="color:${statusColor};font-weight:600">${statusLabel}</span><br>
+              <small style="opacity:0.6">${formatDate(tx.created_at)}</small>
+              ${tx.updated_at !== tx.created_at ? `<br><small style="opacity:0.5">Updated: ${formatDate(tx.updated_at)}</small>` : ''}
             </div>
           </div>
 
-          <small style="opacity:0.5">${formatDate(tx.created_at)}</small>
+          ${responseMsgHtml}
+          ${apiResponseHtml}
 
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-            ${tx.type === 'debit' && !isManual && !isReversed ?
-              `<button onclick="forceDeductTransaction('${tx.reference}', ${tx.amount})" class="warningBtn">Force Deduct</button>` : ''}
+            ${isFailed && !isManual ?
+              `<button onclick="forceDeductTransaction('${tx.reference}', ${tx.amount}, '${tx.username}')" class="warningBtn">Confirm Delivered</button>` : ''}
 
-            ${tx.type === 'credit' && !isReversed ?
-              `<button onclick="reverseTransaction('${tx.reference}')" class="dangerBtn">Reverse</button>` : ''}
+            ${isSuccess && !isReversed ?
+              `<button onclick="reverseTransaction('${tx.reference}')" class="dangerBtn">Reverse/Refund</button>` : ''}
+
+            ${isPending ?
+              `<button onclick="checkTransactionStatus('${tx.reference}')" class="infoBtn">Check Status</button>` : ''}
           </div>
         </div>`;
     });
@@ -1279,13 +1317,13 @@ async function loadAdminTransactions() {
   }
 }
 
-async function forceDeductTransaction(reference, amount) {
-  const reason = prompt(`Deduct ₦${formatNaira(amount)} from user wallet?\n\nEnter reason:`, "Admin manual deduction");
+async function forceDeductTransaction(reference, amount, username) {
+  const reason = prompt(`Confirm delivery for ${username}?\n\nAmount: ₦${formatNaira(amount)}\nReference: ${reference}\n\nEnter reason for manual approval:`, "Confirmed from provider - delivered");
   if (!reason) return;
 
-  if (!confirm(`Confirm deduction of ₦${formatNaira(amount)} from user wallet? This cannot be undone.`)) return;
+  if (!confirm(`Confirm: Mark this transaction as SUCCESS and re-deduct ₦${formatNaira(amount)} from user wallet?\n\nThis means the service was actually delivered despite provider saying failed.`)) return;
 
-  showLoader("Processing deduction...");
+  showLoader("Processing manual approval...");
   try {
     const res = await fetch(API + "/admin/wallet/force-deduct", {
       method: "POST",
@@ -1307,7 +1345,7 @@ async function forceDeductTransaction(reference, amount) {
 }
 
 async function reverseTransaction(reference) {
-  const reason = prompt("Enter reason for reversal:", "Admin reversal");
+  const reason = prompt("Enter reason for reversal:", "Customer complaint - service not received");
   if (!reason) return;
 
   if (!confirm(`Confirm reversal of transaction ${reference}? User wallet will be refunded.`)) return;
@@ -1331,6 +1369,12 @@ async function reverseTransaction(reference) {
     console.error("Reverse transaction error:", e);
     showMsg("Server error", "error");
   }
+}
+
+async function checkTransactionStatus(reference) {
+  showMsg("Checking with provider...", "info");
+  // Zaka iya saka endpoint na checking anan daga baya
+  showMsg("Please check provider dashboard manually for now", "info");
 }
 
 /* ================= ADMIN: USERS MANAGER ================= */
