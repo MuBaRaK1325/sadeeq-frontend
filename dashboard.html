@@ -173,68 +173,64 @@ margin-bottom:15px;
 
 /* NETWORK */
 .networkGrid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-  margin-top:15px;
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin-top:15px;
 }
 
 .networkItem{
-  background:var(--card);
-  backdrop-filter:blur(10px);
-  border:1px solid var(--glass-border);
-  padding:12px;
-  border-radius:50%;
-  text-align:center;
-  cursor:pointer;
-  border:3px solid transparent;
-  aspect-ratio:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:0.2s;
+background:var(--card);
+backdrop-filter:blur(10px);
+border:1px solid var(--glass-border);
+padding:12px;
+border-radius:50%;
+text-align:center;
+cursor:pointer;
+border:3px solid transparent;
+aspect-ratio:1;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:0.2s;
 }
 
 .networkItem.active{
-  border:3px solid var(--primary);
-  transform:scale(1.05);
-  box-shadow:0 0 20px rgba(34, 197, 94, 0.4); /* Green glow */
+border:3px solid var(--primary);
+transform:scale(1.05);
+box-shadow:0 0 20px rgba(147, 51, 234, 0.4);
 }
 
 .networkItem img{
-  width:45px;
-  height:45px;
-  border-radius:50%;
-  object-fit:cover;
+width:45px;
+height:45px;
+border-radius:50%;
+object-fit:cover;
 }
 
 /* PLAN */
 .planItem{
-  background:var(--card);
-  backdrop-filter:blur(10px);
-  border:1px solid var(--glass-border);
-  padding:12px;
-  border-radius:10px;
-  margin-top:10px;
-  cursor:pointer;
-  position:relative;
-  transition:0.2s;
+background:var(--card);
+backdrop-filter:blur(10px);
+border:1px solid var(--glass-border);
+padding:12px;
+border-radius:10px;
+margin-top:10px;
+cursor:pointer;
+position:relative;
+transition:0.2s;
 }
-.planItem:active{
-  background:rgba(34, 197, 94, 0.1); /* Green tint on tap */
-}
+.planItem:active{background:rgba(255, 255, 255, 0.2);}
 
 .topUserBadge{
-  position:absolute;
-  top:8px;
-  right:8px;
-  background:var(--success);
-  padding:2px 6px;
-  border-radius:4px;
-  font-size:10px;
-  font-weight:600;
+position:absolute;
+top:8px;
+right:8px;
+background:var(--success);
+padding:2px 6px;
+border-radius:4px;
+font-size:10px;
 }
-
 /* PLAN TABS */
 .planTabs { 
   display: flex; 
@@ -249,7 +245,7 @@ margin-bottom:15px;
   padding: 8px 16px; 
   border: 1px solid var(--glass-border); 
   border-radius: 20px; 
-  background: rgba(34, 197, 94, 0.05); /* Light green bg */
+  background: rgba(255,255,255,0.05); 
   color: var(--text);
   cursor: pointer; 
   font-weight: 600;
@@ -259,10 +255,9 @@ margin-bottom:15px;
   backdrop-filter: blur(10px);
 }
 .planTab.active { 
-  background: #22c55e; /* Green */
+  background: var(--primary, #00ffaa); 
   color: #fff; 
-  border-color: #22c55e; 
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+  border-color: var(--primary, #00ff80); 
 }
 .planTab:active { transform: scale(0.95); }
 
@@ -270,13 +265,16 @@ margin-bottom:15px;
   position:absolute;
   top:8px;
   right:8px;
-  background:#22c55e; /* Green instead of teal */
+  background:#ffa000;
   padding:2px 6px;
   border-radius:4px;
   font-size:10px;
-  color:#fff; /* White text for green bg */
+  color:#000;
   font-weight:600;
 }
+
+
+
 
 /* TRANSACTION */
 .transactionCard{
