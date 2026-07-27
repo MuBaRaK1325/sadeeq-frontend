@@ -79,11 +79,12 @@ function showInputModal(title, placeholder, callback) {
   };
 }
 
-/* ================= LOADER - FIXED TO NOT CONFLICT ================= */
+/* ================= LOADER ================= */
 function showLoader(text = "Processing...") {
   if (el("loaderText")) el("loaderText").innerText = text;
   openModal("loaderModal");
 }
+
 function hideLoader() { 
   closeModal("loaderModal"); 
 }
@@ -101,7 +102,8 @@ function checkAuth() {
 async function loadDashboard() {
   if (!checkAuth()) return;
 
-  initKycListeners(); // ADD THIS LINE RIGHT HERE
+   initKycListeners(); // ADD THIS LINE RIGHT HERE
+
 
   try {
     const res = await fetch(API + "/api/me", { headers: { Authorization: "Bearer " + getToken() } });
