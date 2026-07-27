@@ -148,7 +148,15 @@ function initNavigation() {
 
 function showSection(id) {
   document.querySelectorAll(".section").forEach(s => s.style.display = "none");
-  el(id).style.display = "block";
+  
+  const target = el(id);
+  if (!target) {
+    console.error("Section not found:", id);
+    return; // prevents the crash
+  }
+  
+  target.style.display = "block";
+  
   if (id === "profitDashboard") loadProfitDashboard();
   if (id === "topUsersManager") loadTopUsers();
   if (id === "withdrawals") {
