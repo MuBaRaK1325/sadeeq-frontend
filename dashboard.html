@@ -1238,7 +1238,12 @@ details pre {
     <button id="biometricLoginBtn" onclick="loginWithBiometric()" style="display:none">🫆 Login with Fingerprint</button>
   </div>
 </div>
+
 <button onclick="openModal('passwordModal')">Change Password</button>
+
+<!-- ADD THIS LINE -->
+<button onclick="openModal('pinModalBox')">Change PIN</button>
+
 <div id="pinModalBox" class="modal">
   <div class="modalBox">
     <h3>Change PIN</h3>
@@ -1253,11 +1258,13 @@ details pre {
 
     <div class="modal-buttons">
       <button onclick="closeModal('pinModalBox')">Cancel</button>
-      <button onclick="savePin()">Save</button>
+      <button onclick="submitPin()">Save</button> <!-- changed from savePin() to submitPin() -->
     </div>
   </div>
 </div>
+
 <button onclick="logout()">Logout</button>
+</section>
 
 <!-- ADMIN PANEL -->
 <div class="adminOnly">
