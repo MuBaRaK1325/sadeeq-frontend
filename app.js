@@ -1711,7 +1711,11 @@ async function submitPassword() {
 async function submitPin() {
   const oldPin = el("oldPin").value;
   const newPin = el("newPin").value;
-  if (!oldPin ||!newPin) return showMsg("Fill fields", "error");
+  const confirmPin = el("confirmPin").value;
+  
+  if (!oldPin || !newPin || !confirmPin) return showMsg("Fill all fields", "error");
+  if (newPin !== confirmPin) return showMsg("PINs do not match", "error");
+  if (newPin.length !== 4 || isNaN(newPin)) return showMsg("PIN must be 4 digits", "error");
 
   showLoader("Updating...");
   const res = await fetch(API + "/api/change-pin", {
@@ -1722,7 +1726,44 @@ async function submitPin() {
   const data = await res.json();
   hideLoader();
   showMsg(data.message, res.ok ? "success" : "error");
+  
+  if(res.ok) {
+    el("oldPin").value = "";
+    el("newPin").value = "";
+    el("confirmPin").value = "";
+    closeModal('pinModalBox');
+  }
 }
+
+/* ================= FORGOT PIN ================= */
+async function forgotPin() {
+  const password = prompt("Enter your login password to reset PIN:");
+  if (!password) return;
+
+  const newPin = prompt("Enter new 4-digit PIN:");
+  if (!newPin || newPin.length !== 4 || isNaN(newPin)) {
+    return showMsg("PIN must be 4 digits", "error");
+  }
+
+  const confirmPin = prompt("Confirm new PIN:");
+  if (newPin !== confirmPin) {
+    return showMsg("PINs do not match", "error");
+  }
+
+  showLoader("Resetting PIN...");
+  const res = await fetch(API + "/api/reset-pin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
+    body: JSON.stringify({ password, newPin })
+  });
+  const data = await res.json();
+  hideLoader();
+  showMsg(data.message, res.ok ? "success" : "error");
+  
+  if(res.ok) closeModal('pinModalBox');
+}
+
+
 
 /* ================= ADMIN DATA LOADER ================= */
 function loadAdminData() {

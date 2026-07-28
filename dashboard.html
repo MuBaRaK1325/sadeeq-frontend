@@ -1239,7 +1239,24 @@ details pre {
   </div>
 </div>
 <button onclick="openModal('passwordModal')">Change Password</button>
-<button onclick="openModal('pinModalBox')">Change PIN</button>
+<div id="pinModalBox" class="modal">
+  <div class="modalBox">
+    <h3>Change PIN</h3>
+    
+    <input type="password" id="oldPin" placeholder="Current PIN" maxlength="4">
+    <input type="password" id="newPin" placeholder="New PIN" maxlength="4">
+    <input type="password" id="confirmPin" placeholder="Confirm New PIN" maxlength="4">
+    
+    <button onclick="forgotPin()" class="linkBtn" style="margin-top:8px; font-size:12px;">
+      Forgot PIN?
+    </button>
+
+    <div class="modal-buttons">
+      <button onclick="closeModal('pinModalBox')">Cancel</button>
+      <button onclick="savePin()">Save</button>
+    </div>
+  </div>
+</div>
 <button onclick="logout()">Logout</button>
 
 <!-- ADMIN PANEL -->
