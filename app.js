@@ -471,6 +471,23 @@ function renderPlans() {
   });
 }
 
+/* ================= AIRTIME NETWORK ================= */
+function selectAirtimeNetwork(network, element) {
+
+    airtimeNetwork = (network || "").toLowerCase();
+
+    document.querySelectorAll(".airtimeNet").forEach(item => {
+        item.classList.remove("active");
+    });
+
+    if (element) {
+        element.classList.add("active");
+    }
+
+    console.log("Selected Airtime Network:", airtimeNetwork);
+
+}
+
 /* ================= BIOMETRIC STATUS - SADEEQ DATA HUB - FIXED 100% ================= */
 const APP_NAME = 'SADEEQ DATA HUB';
 const APP_LOGO = '/images/SADEEQ.PNG';
