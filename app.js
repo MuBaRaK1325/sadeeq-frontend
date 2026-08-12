@@ -931,6 +931,137 @@ async function openPurchaseModal(planId, planName, planPrice) {
     }, 100);
 }
 
+
+/* ================= AIRTIME ================= */
+
+function openAirtimePin() {
+
+    const phone = el("airtimePhone").value;
+    const amount = el("airtimeAmount").value;
+
+    if (!phone || !amount || !airtimeNetwork)
+        return showMsg("Fill all fields", "error");
+
+    selectedPhone = phone;
+    actionType = "AIRTIME";
+
+    const pinInput = el("pinInput");
+    const pinTitle = el("pinModalTitle");
+    const pinDetails = el("pinModalDetails");
+    const bioBtn = el("biometricPurchaseBtn");
+
+    if (pinInput) pinInput.value = "";
+
+    if (pinTitle)
+        pinTitle.innerText = "Confirm Airtime";
+
+    if (pinDetails)
+        pinDetails.innerHTML =
+            `<strong>${airtimeNetwork.toUpperCase()} Airtime</strong><br>
+             ${formatNaira(amount)}<br>
+             To: ${phone}`;
+
+    if (
+        window.Capacitor?.isNativePlatform?.() &&
+        window.Capacitor?.Plugins?.NativeBiometric
+    ) {
+        if (bioBtn) bioBtn.style.display = "flex";
+    } else {
+        if (bioBtn) bioBtn.style.display = "none";
+    }
+
+    openModal("pinModal");
+
+    setTimeout(() => {
+        pinInput?.focus();
+    }, 100);
+}
+
+
+/* ================= CONFIRM PIN ================= */
+
+function confirmPurchase() {
+
+    const pin = el("pinInput")?.value;
+
+    if (!pin)
+        return showMsg("Enter PIN", "error");
+
+    closeModal("pinModal");
+
+    if (actionType === "DATA")
+        buyData(pin);
+
+    if (actionType === "AIRTIME")
+        buyAirtime(pin);
+
+}
+
+
+/* ================= BIOMETRIC PURCHASE ================= */
+
+async function purchaseWithBiometric() {
+
+    try {
+
+        const NativeBiometric =
+            window.Capacitor?.Plugins?.NativeBiometric;
+
+        if (
+            !window.Capacitor?.isNativePlatform?.() ||
+            !NativeBiometric
+        ) {
+            return showMsg(
+                "Fingerprint is only available in the Android app.",
+                "error"
+            );
+        }
+
+        closeModal("pinModal");
+
+        showLoader("Verify Fingerprint...");
+
+        await NativeBiometric.verifyIdentity({
+
+            title: "SADEEQ DATA HUB",
+
+            subtitle: "Fingerprint Verification",
+
+            description: "Authenticate Purchase",
+
+            reason: "Confirm Purchase",
+
+            negativeButtonText: "Cancel"
+
+        });
+
+        hideLoader();
+
+        if (actionType === "DATA") {
+
+            buyData("biometric_verified");
+
+        } else if (actionType === "AIRTIME") {
+
+            buyAirtime("biometric_verified");
+
+        }
+
+    } catch (err) {
+
+        hideLoader();
+
+        console.error(err);
+
+        showMsg(
+            err.message || "Fingerprint verification failed.",
+            "error"
+        );
+
+    }
+
+}
+
 /* ================= BUY DATA - WITH SADEEQ RECEIPT ================= */
 async function buyData(pin) {
   const phone = selectedPhone || el("dataPhone")?.value;
