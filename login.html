@@ -129,7 +129,9 @@
       </div>
 
       <button id="loginBtn" class="btn btn-primary">Login</button>
-      <button onclick="biometricLogin()" class="btn btn-ghost">🔐 Login with Fingerprint / Face ID</button>
+<button id="biometricBtn" class="btn btn-ghost">
+  🔐 Login with Fingerprint / Face ID
+</button>
       <a href="signup.html" class="btn btn-secondary">Create Account</a>
     </div>
     <a href="https://wa.me/2348131375356?text=I%20forgot%20my%20password" class="btn btn-ghost">Forgot Password?</a>
@@ -137,108 +139,394 @@
 
 <script>
 const API = "https://mayconnect-backend-1.onrender.com";
+
 const usernameInput = document.getElementById("loginUsername");
 const passwordInput = document.getElementById("loginPassword");
 const loginBtn = document.getElementById("loginBtn");
+const biometricBtn = document.getElementById("biometricBtn");
 const loader = document.getElementById("loginLoader");
 const welcomeSound = new Audio("sounds/welcome.mp3");
 
-if (localStorage.getItem("token")) window.location.href = "dashboard.html";
+const NativeBiometric =
+window.Capacitor?.Plugins?.NativeBiometric;
 
-function togglePassword(){
-  passwordInput.type = passwordInput.type === "password"? "text" : "password";
-  document.querySelector(".showBtn").innerText = passwordInput.type === "password"? "Show" : "Hide";
+document.addEventListener("DOMContentLoaded", () => {
+
+if (localStorage.getItem("token")) {
+location.href = "dashboard.html";
+}
+
+});
+
+function togglePassword() {
+
+if (!passwordInput) return;
+
+passwordInput.type =
+passwordInput.type === "password"
+? "text"
+: "password";
+
+}
+
+async function login() {
+
+const username = usernameInput.value.trim();  
+const password = passwordInput.value.trim();  
+
+if (!username || !password) {  
+    alert("Saka username da password");  
+    return;  
+}  
+
+loginBtn.disabled = true;  
+loader.style.display = "flex";  
+
+try {  
+
+    const res = await fetch(API + "/api/login", {  
+
+        method: "POST",  
+
+        headers: {  
+            "Content-Type": "application/json"  
+        },  
+
+        body: JSON.stringify({  
+            username,  
+            password  
+        })  
+
+    });  
+
+    const data = await res.json();  
+    console.log("LOGIN RESPONSE =", data);  
+
+    if (!res.ok) {  
+        throw new Error(data.message || "Login failed");  
+    }
+
+// Save login details
+localStorage.setItem("token", data.token);
+localStorage.setItem("username", data.user.username);
+localStorage.setItem("userId", data.user.id);
+localStorage.setItem("email", data.user.email || "");
+
+// Save password temporarily for fingerprint setup
+localStorage.setItem("biometric_password", password);
+
+console.log("Saved username:", localStorage.getItem("username"));
+console.log("Saved password:", localStorage.getItem("biometric_password"));
+
+if (data.user.is_admin) {
+alert("Welcome Admin");
+}
+
+welcomeSound.play().catch(() => {});  
+
+    setTimeout(() => {  
+        location.href = "dashboard.html";  
+    }, 600);  
+
+} catch (err) {  
+
+    console.error(err);  
+
+    alert(err.message || "Server error");  
+
+    loader.style.display = "none";  
+    loginBtn.disabled = false;  
+
+}
+
 }
 
 loginBtn.addEventListener("click", login);
 
-async function login(){
-  const username = usernameInput.value.trim();
-  const password = passwordInput.value.trim();
-  if(!username ||!password) return alert("Enter username and password");
-  loginBtn.disabled = true;
-  loader.style.display = "flex";
-  try{
-    const res = await fetch(API + "/api/login",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ username, password })
-    });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.message || "Login failed");
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("username", data.username);
-    if(data.is_admin) alert("Welcome Admin");
-    welcomeSound.play().catch(()=>{});
-    setTimeout(()=>{ window.location.href = "dashboard.html"; },600);
-  }catch(err){
-    alert(err.message || "Server error");
-    loader.style.display = "none";
-    loginBtn.disabled = false;
-  }
+if (biometricBtn) {
+biometricBtn.addEventListener(
+"click",
+biometricLogin
+);
 }
 
-async function base64URLToBuffer(base64URL) {
-  const base64 = base64URL.replace(/-/g, '+').replace(/_/g, '/');
-  const padLen = (4 - (base64.length % 4)) % 4;
-  const padded = base64 + '='.repeat(padLen);
-  const binary = atob(padded);
-  const buffer = new ArrayBuffer(binary.length);
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return buffer;
+/* ================= HELPERS ================= */
+
+function base64urlToArrayBuffer(base64url) {
+
+if (!base64url) {  
+    throw new Error("Missing base64url value");  
+}  
+
+const padding =  
+    "=".repeat((4 - (base64url.length % 4)) % 4);  
+
+const base64 =  
+    (base64url + padding)  
+        .replace(/-/g, "+")  
+        .replace(/_/g, "/");  
+
+const binary = atob(base64);  
+
+const bytes = new Uint8Array(binary.length);  
+
+for (let i = 0; i < binary.length; i++) {  
+    bytes[i] = binary.charCodeAt(i);  
+}  
+
+return bytes.buffer;
+
 }
 
-async function bufferToBase64URL(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let str = '';
-  for (const charCode of bytes) str += String.fromCharCode(charCode);
-  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+function arrayBufferToBase64url(buffer) {
+
+const bytes = new Uint8Array(buffer);  
+
+let binary = "";  
+
+for (const b of bytes) {  
+    binary += String.fromCharCode(b);  
+}  
+
+return btoa(binary)  
+    .replace(/\+/g, "-")  
+    .replace(/\//g, "_")  
+    .replace(/=/g, "");
+
 }
 
-async function biometricLogin(){
-  const usernameOrEmail = usernameInput.value.trim();
-  if(!usernameOrEmail) return alert("Enter your username or email first");
-  if(!window.PublicKeyCredential) return alert("Biometric not supported");
-  loader.style.display="flex";
-  try{
-    const startRes = await fetch(API + "/api/auth/webauthn/login-start", {
-      method:"POST", headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ email: usernameOrEmail })
-    });
-    if(!startRes.ok) throw new Error("No biometric registered");
-    const options = await startRes.json();
-    options.challenge = await base64URLToBuffer(options.challenge);
-    if(options.allowCredentials){
-      options.allowCredentials = await Promise.all(options.allowCredentials.map(async cred => ({
-     ...cred, id: await base64URLToBuffer(cred.id)
-      })));
-    }
-    const credential = await navigator.credentials.get({ publicKey: options });
-    const finishRes = await fetch(API + "/api/auth/webauthn/login-finish", {
-      method:"POST", headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        email: usernameOrEmail,
-        id: credential.id,
-        rawId: await bufferToBase64URL(credential.rawId),
-        response: {
-          authenticatorData: await bufferToBase64URL(credential.response.authenticatorData),
-          clientDataJSON: await bufferToBase64URL(credential.response.clientDataJSON),
-          signature: await bufferToBase64URL(credential.response.signature),
-          userHandle: credential.response.userHandle? await bufferToBase64URL(credential.response.userHandle) : null,
-        },
-        type: credential.type
-      })
-    });
-    if(!finishRes.ok) throw new Error("Authentication failed");
-    const { token, username } = await finishRes.json();
-    localStorage.setItem("token", token);
-    localStorage.setItem("username", username);
-    window.location.href = "dashboard.html";
-  }catch(e){
-    loader.style.display="none";
-    alert('Biometric login failed: ' + e.message);
-  }
+async function biometricLogin() {
+
+// ================= ANDROID APP =================
+if (window.Capacitor?.isNativePlatform?.() && NativeBiometric) {
+
+try {  
+
+    // Show the same loader used by password login  
+    loginBtn.disabled = true;  
+    loader.style.display = "flex";  
+
+    const username = localStorage.getItem("username");  
+
+    if (!username) {  
+        throw new Error("Please login normally once before using fingerprint.");  
+    }  
+
+    const server = "sadeeq-datahub-" + username;  
+
+    const result = await NativeBiometric.isCredentialsSaved({  
+        server  
+    });  
+
+    if (!result.isSaved) {  
+        throw new Error("Fingerprint has not been enabled for this account.");  
+    }  
+
+    await NativeBiometric.verifyIdentity({  
+        reason: "Login with Fingerprint",  
+        title: "SADEEQ DATA HUB"  
+    });  
+
+    const credentials = await NativeBiometric.getCredentials({  
+        server  
+    });  
+
+    const res = await fetch(API + "/api/login", {  
+        method: "POST",  
+        headers: {  
+            "Content-Type": "application/json"  
+        },  
+        body: JSON.stringify({  
+            username: credentials.username,  
+            password: credentials.password  
+        })  
+    });  
+
+    const data = await res.json();  
+
+    if (!res.ok) {  
+        throw new Error(data.message || "Login failed");  
+    }  
+
+    localStorage.setItem("token", data.token);  
+    localStorage.setItem("username", data.user.username);  
+    localStorage.setItem("userId", data.user.id);  
+    localStorage.setItem("email", data.user.email || "");  
+
+    // Hide loader before redirect  
+    loader.style.display = "none";  
+
+    window.location.href = "dashboard.html";  
+    return;  
+
+} catch (err) {  
+
+    console.error(err);  
+
+    // Hide loader if login fails  
+    loader.style.display = "none";  
+    loginBtn.disabled = false;  
+
+    alert(err.message || "Biometric login failed");  
+    return;  
+}
+
+}
+
+// ================= WEBSITE (your existing code continues below) =================
+
+try {
+
+const res = await fetch(
+API + "/api/auth/webauthn/login-start",
+{
+method: "POST",
+credentials: "include"
+}
+);
+
+const options = await res.json();
+
+if (!res.ok) {
+throw new Error(options.error || "Login start failed");
+}
+
+const publicKey = {
+challenge: base64urlToArrayBuffer(
+options.challenge
+),
+rpId: options.rpId,
+timeout: options.timeout,
+userVerification:
+options.userVerification || "preferred"
+};
+
+if (
+Array.isArray(options.allowCredentials) &&
+options.allowCredentials.length > 0
+) {
+
+publicKey.allowCredentials =
+options.allowCredentials.map(c => ({
+
+type: "public-key",    
+
+  id: base64urlToArrayBuffer(    
+    String(c.id).trim()    
+  ),    
+
+  transports:    
+    Array.isArray(c.transports)    
+     ? c.transports    
+      : ["internal", "hybrid"]    
+
+}));
+
+}
+
+const credential =
+await navigator.credentials.get({
+publicKey
+});
+
+if (!credential) {
+throw new Error("Cancelled");
+}
+
+const authRes = await fetch(
+API + "/api/auth/webauthn/login-finish",
+{
+method: "POST",
+credentials: "include",
+
+headers: {    
+  "Content-Type": "application/json"    
+},    
+
+body: JSON.stringify({    
+
+  id: credential.id,    
+
+  rawId:    
+    arrayBufferToBase64url(    
+      credential.rawId    
+    ),    
+
+  response: {    
+
+    authenticatorData:    
+      arrayBufferToBase64url(    
+        credential.response.authenticatorData    
+      ),    
+
+    clientDataJSON:    
+      arrayBufferToBase64url(    
+        credential.response.clientDataJSON    
+      ),    
+
+    signature:    
+      arrayBufferToBase64url(    
+        credential.response.signature    
+      ),    
+
+    userHandle:    
+      credential.response.userHandle    
+       ? arrayBufferToBase64url(    
+            credential.response.userHandle    
+          )    
+        : null    
+
+  },    
+
+  type: credential.type    
+
+})
+
+}
+);
+
+const data = await authRes.json();
+
+if (!authRes.ok) {
+throw new Error(
+data.error || "Verification failed"
+);
+}
+
+localStorage.setItem(
+
+"token",
+data.token
+);
+
+if (data.user) {
+
+localStorage.setItem(
+"userId",
+data.user.id
+);
+
+localStorage.setItem(
+"username",
+data.user.username
+);
+
+localStorage.setItem(
+"email",
+data.user.email || ""
+);
+
+}
+
+location.href = "dashboard.html";
+
+}
+catch (err) {
+
+console.error(err);
+
+}
+
 }
 </script>
 </body>
